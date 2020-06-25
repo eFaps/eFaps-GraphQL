@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package org.efaps.graphql;
+package org.efaps.graphql.providers;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,12 +26,11 @@ import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 
-public class TypeProvider
+public class TypeProvider extends AbstractProvider
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
@@ -63,15 +62,21 @@ public class TypeProvider
                                             .selectable(Selectables
                                                             .attribute(CIGraphQL.ObjectType2FieldDefinition.ToID)))
                             .select()
-                            .attribute(CIGraphQL.FieldDefinition.Name)
+                            .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType)
+                            .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
+                                .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
+                                .attribute(CIGraphQL.ObjectType.Name)
+                                .first().as("ObjectName")
                             .evaluate();
 
             while (fieldEval.next()) {
                 final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
+                final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
+                final String objectName = eval.get("ObjectName");
                 LOG.info("    Field: {}", fieldName);
                 objectTypeBldr.field(GraphQLFieldDefinition.newFieldDefinition()
                                 .name(fieldName)
-                                .type(Scalars.GraphQLString));
+                                .type(evalOutputType(fieldType, objectName)));
             }
             ret.add(objectTypeBldr.build());
         }

@@ -37,6 +37,18 @@ public final class CIGraphQL
         {
             super(_uuid);
         }
+        public final CIAttribute FieldType = new CIAttribute(this, "FieldType");
+    }
+
+    public static final _EntryPointFieldDefinition EntryPointFieldDefinition = new _EntryPointFieldDefinition("7a5c0ee4-bd08-4a8d-a46e-b58b1a337b64");
+    public static class _EntryPointFieldDefinition extends _ElementAbstract
+    {
+        protected _EntryPointFieldDefinition(final String _uuid)
+        {
+            super(_uuid);
+        }
+
+        public final CIAttribute FieldType = new CIAttribute(this, "FieldType");
     }
 
     public static final _Object2ObjectAbstract Object2ObjectAbstract = new _Object2ObjectAbstract("302f2d7a-eba6-48f2-909b-c99973c55ba1");
@@ -58,6 +70,28 @@ public final class CIGraphQL
     public static class _ObjectType2FieldDefinition extends _Object2ObjectAbstract
     {
         protected _ObjectType2FieldDefinition(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute FromLink = new CIAttribute(this, "FromLink");
+        public final CIAttribute ToLink = new CIAttribute(this, "ToLink");
+    }
+
+    public static final _EntryPointFieldDefinition2ObjectType EntryPointFieldDefinition2ObjectType = new _EntryPointFieldDefinition2ObjectType("cee2bcb0-c6c0-48f4-8782-e4081360ca6a");
+    public static class _EntryPointFieldDefinition2ObjectType extends _Object2ObjectAbstract
+    {
+        protected _EntryPointFieldDefinition2ObjectType(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute FromLink = new CIAttribute(this, "FromLink");
+        public final CIAttribute ToLink = new CIAttribute(this, "ToLink");
+    }
+
+    public static final _FieldDefinition2ObjectType FieldDefinition2ObjectType = new _FieldDefinition2ObjectType("189f62d5-8add-4fb3-bf3a-1a936063d9d3");
+    public static class _FieldDefinition2ObjectType extends _Object2ObjectAbstract
+    {
+        protected _FieldDefinition2ObjectType(final String _uuid)
         {
             super(_uuid);
         }

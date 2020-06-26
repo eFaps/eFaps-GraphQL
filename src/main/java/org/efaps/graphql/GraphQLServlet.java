@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.efaps.graphql.providers.DataFetcherProvider;
 import org.efaps.graphql.providers.EntryPointProvider;
 import org.efaps.graphql.providers.TypeProvider;
 import org.efaps.util.EFapsException;
@@ -40,7 +41,6 @@ import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
-import graphql.schema.FieldCoordinates;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
@@ -51,8 +51,12 @@ public class GraphQLServlet
     extends HttpServlet
 {
 
+    public static String QUERYNAME = "query";
+
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(GraphQLServlet.class);
+
+
 
     @Override
     protected void doGet(final HttpServletRequest _req, final HttpServletResponse _resp)
@@ -84,10 +88,10 @@ public class GraphQLServlet
 
     public ExecutionResult query(final String _exec) throws EFapsException
     {
-        final var codeRegistry = GraphQLCodeRegistry.newCodeRegistry()
-                        .dataFetcher(FieldCoordinates.coordinates("query", "products"), getProductsFetcherFactory())
-                        .build();
 
+        final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
+        final var dataFetcherProvider = new DataFetcherProvider();
+        dataFetcherProvider.addDataFetchers(registryBldr);
 
         final var productType = GraphQLObjectType.newObject()
                         .name("Product22")
@@ -107,10 +111,8 @@ public class GraphQLServlet
         final var entryPointFields = entryPointProvider.getFields();
 
         final var queryType = GraphQLObjectType.newObject()
-                        .name("query")
+                        .name(QUERYNAME)
                         .fields(entryPointFields)
-                      //  .field(GraphQLFieldDefinition.newFieldDefinition()
-                      //                  .name("products").type(GraphQLList.list(productType)))
                         .build();
 
         final var typeProvider = new TypeProvider();
@@ -123,7 +125,7 @@ public class GraphQLServlet
         }
 
         final GraphQLSchema graphQLSchema = GraphQLSchema.newSchema()
-                        .codeRegistry(codeRegistry)
+                        .codeRegistry(registryBldr.build())
                         .query(queryType)
                         .additionalTypes(types)
                         .additionalType(productType)

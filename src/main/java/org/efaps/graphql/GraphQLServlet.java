@@ -36,8 +36,10 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.GraphQLContext;
 import graphql.Scalars;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
@@ -86,12 +88,12 @@ public class GraphQLServlet
         }
     }
 
-    public ExecutionResult query(final String _exec) throws EFapsException
+    public ExecutionResult query(final String _query) throws EFapsException
     {
-
+        final GraphQLContext.Builder contextBldr = GraphQLContext.newContext();
         final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
         final var dataFetcherProvider = new DataFetcherProvider();
-        dataFetcherProvider.addDataFetchers(registryBldr);
+        dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
 
         final var productType = GraphQLObjectType.newObject()
                         .name("Product22")
@@ -118,7 +120,7 @@ public class GraphQLServlet
         final var typeProvider = new TypeProvider();
         Set<GraphQLType> types = null;
         try {
-           types = typeProvider.getTypes();
+           types = typeProvider.getTypes(contextBldr);
         } catch (final EFapsException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -131,7 +133,13 @@ public class GraphQLServlet
                         .additionalType(productType)
                         .build();
         final GraphQL build = GraphQL.newGraphQL(graphQLSchema).build();
-        final ExecutionResult executionResult = build.execute(_exec);
+
+        final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
+                        .query(_query)
+                        .context(contextBldr)
+                        .build();
+
+        final ExecutionResult executionResult = build.execute(executionInput);
         return executionResult;
     }
 

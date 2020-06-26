@@ -16,16 +16,20 @@
  */
 package org.efaps.graphql.providers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.efaps.eql.EQL;
 import org.efaps.eql.builder.Selectables;
 import org.efaps.graphql.ci.CIGraphQL;
+import org.efaps.graphql.definition.FieldDef;
+import org.efaps.graphql.definition.ObjectDef;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import graphql.GraphQLContext;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
@@ -35,7 +39,7 @@ public class TypeProvider extends AbstractProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
 
-    public Set<GraphQLType> getTypes()
+    public Set<GraphQLType> getTypes(final GraphQLContext.Builder _contextBldr)
         throws EFapsException
     {
         final var ret = new HashSet<GraphQLType>();
@@ -47,6 +51,10 @@ public class TypeProvider extends AbstractProvider
         while (eval.next()) {
             final String name = eval.get(CIGraphQL.ObjectType.Name);
             LOG.info("Type: {}", name);
+            final var objectDefBldr = ObjectDef.builder();
+            objectDefBldr.withName(name)
+                .withOid(eval.inst().getOid());
+
             final var objectTypeBldr = GraphQLObjectType.newObject()
                             .name(name);
 
@@ -62,23 +70,32 @@ public class TypeProvider extends AbstractProvider
                                             .selectable(Selectables
                                                             .attribute(CIGraphQL.ObjectType2FieldDefinition.ToID)))
                             .select()
-                            .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType)
+                            .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType,
+                                            CIGraphQL.FieldDefinition.Select)
                             .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
                                 .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
                                 .attribute(CIGraphQL.ObjectType.Name)
                                 .first().as("ObjectName")
                             .evaluate();
 
+            final var fields = new HashMap<String, FieldDef>();
             while (fieldEval.next()) {
                 final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
                 final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
+                final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
                 final String objectName = eval.get("ObjectName");
                 LOG.info("    Field: {}", fieldName);
                 objectTypeBldr.field(GraphQLFieldDefinition.newFieldDefinition()
                                 .name(fieldName)
                                 .type(evalOutputType(fieldType, objectName)));
+
+                fields.put(fieldName, FieldDef.builder()
+                                .withName(fieldName)
+                                .withSelect(select)
+                                .build());
             }
             ret.add(objectTypeBldr.build());
+            _contextBldr.of(name, objectDefBldr.withFields(fields).build());
         }
         return ret;
     }

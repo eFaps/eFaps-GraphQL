@@ -18,6 +18,7 @@
 package org.efaps.graphql.providers;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.db.Instance;
@@ -28,6 +29,7 @@ import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import graphql.GraphQLContext;
 import graphql.schema.DataFetcher;
 import graphql.schema.FieldCoordinates;
 import graphql.schema.GraphQLCodeRegistry.Builder;
@@ -36,7 +38,7 @@ public class DataFetcherProvider
 {
     private static final Logger LOG = LoggerFactory.getLogger(DataFetcherProvider.class);
 
-    public void addDataFetchers(final Builder _registryBldr)
+    public void addDataFetchers(final Builder _registryBldr, final GraphQLContext.Builder _contextBldr)
         throws EFapsException
     {
         final var eval = EQL.builder()
@@ -79,6 +81,22 @@ public class DataFetcherProvider
                 try {
                     final var clazz = Class.forName(className, false, EFapsClassLoader.getInstance());
                     final var dataFetcher = (DataFetcher<?>) clazz.getConstructor().newInstance();
+
+                    final var propertyEval = EQL.builder().print()
+                        .query(CIGraphQL.Property)
+                        .where()
+                        .attribute(CIGraphQL.Property.ParentElementLink).eq(eval.inst())
+                        .select()
+                        .attribute(CIGraphQL.Property.Key, CIGraphQL.Property.Value)
+                        .evaluate();
+                    final var properties =new HashMap<String, String>();
+                    while (propertyEval.next()) {
+                        properties.put(propertyEval.get(CIGraphQL.Property.Key),
+                                        propertyEval.get(CIGraphQL.Property.Value));
+                    }
+                    if (!properties.isEmpty()) {
+                        _contextBldr.of(contextKey(typeName, fieldName), properties);
+                    }
                     _registryBldr.dataFetcher(FieldCoordinates.coordinates(typeName, fieldName), dataFetcher);
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                                 | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
@@ -89,4 +107,8 @@ public class DataFetcherProvider
         }
     }
 
+    public static String contextKey(final String _typeName, final String _fieldName)
+    {
+        return "datafetcher-" + _typeName + "-" + _fieldName;
+    }
 }

@@ -38,6 +38,7 @@ public final class CIGraphQL
             super(_uuid);
         }
         public final CIAttribute FieldType = new CIAttribute(this, "FieldType");
+        public final CIAttribute Select = new CIAttribute(this, "Select");
     }
 
     public static final _FieldDefinition FieldDefinition = new _FieldDefinition("d8161807-22e2-4e5d-813d-680b6109b188");
@@ -67,6 +68,18 @@ public final class CIGraphQL
             super(_uuid);
         }
         public final CIAttribute ClassName = new CIAttribute(this, "ClassName");
+    }
+
+    public static final _Property Property = new _Property("34d52a49-180f-40e0-89e0-b82a5bd3ff3c");
+    public static class _Property extends _ElementAbstract
+    {
+        protected _Property(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute ParentElementLink = new CIAttribute(this, "ParentElementLink");
+        public final CIAttribute Key = new CIAttribute(this, "Key");
+        public final CIAttribute Value = new CIAttribute(this, "Value");
     }
 
     public static final _Object2ObjectAbstract Object2ObjectAbstract = new _Object2ObjectAbstract("302f2d7a-eba6-48f2-909b-c99973c55ba1");

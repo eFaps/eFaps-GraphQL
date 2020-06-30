@@ -83,7 +83,7 @@ public class TypeProvider extends AbstractProvider
                 final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
                 final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
                 final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
-                final String objectName = eval.get("ObjectName");
+                final String objectName = fieldEval.get("ObjectName");
                 LOG.info("    Field: {}", fieldName);
                 objectTypeBldr.field(GraphQLFieldDefinition.newFieldDefinition()
                                 .name(fieldName)

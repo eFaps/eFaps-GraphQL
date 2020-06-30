@@ -24,7 +24,10 @@ public enum FieldType implements IEnum
     STRING,
     BIGDECIMAL,
     OBJECT,
-    OBJECTLIST;
+    OBJECTLIST,
+    INT,
+    LONG,
+    BOOLEAN;
 
     @Override
     public int getInt()

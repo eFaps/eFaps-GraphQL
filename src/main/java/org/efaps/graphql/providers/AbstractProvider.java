@@ -37,6 +37,15 @@ public abstract class AbstractProvider
             case OBJECTLIST:
                 ret = GraphQLList.list(GraphQLTypeReference.typeRef(_objectName));
                 break;
+            case BOOLEAN:
+                ret = Scalars.GraphQLBoolean;
+                break;
+            case INT:
+                ret = Scalars.GraphQLInt;
+                break;
+            case LONG:
+                ret = Scalars.GraphQLLong;
+                break;
             case STRING:
             default:
                 ret = Scalars.GraphQLString;

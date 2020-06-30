@@ -40,11 +40,9 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
-import graphql.Scalars;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
@@ -95,19 +93,6 @@ public class GraphQLServlet
         final var dataFetcherProvider = new DataFetcherProvider();
         dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
 
-        final var productType = GraphQLObjectType.newObject()
-                        .name("Product22")
-                        .field(GraphQLFieldDefinition.newFieldDefinition()
-                                        .name("sku")
-                                        .type(Scalars.GraphQLString))
-                        .field(GraphQLFieldDefinition.newFieldDefinition()
-                                        .name("Description")
-                                        .type(Scalars.GraphQLString))
-                        .field(GraphQLFieldDefinition.newFieldDefinition()
-                                        .name("price")
-                                        .type(Scalars.GraphQLBigDecimal))
-                        .build();
-
         final var entryPointProvider = new EntryPointProvider();
 
         final var entryPointFields = entryPointProvider.getFields();
@@ -130,7 +115,6 @@ public class GraphQLServlet
                         .codeRegistry(registryBldr.build())
                         .query(queryType)
                         .additionalTypes(types)
-                        .additionalType(productType)
                         .build();
         final GraphQL build = GraphQL.newGraphQL(graphQLSchema).build();
 

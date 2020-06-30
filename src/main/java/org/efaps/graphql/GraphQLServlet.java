@@ -18,14 +18,15 @@ package org.efaps.graphql;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.efaps.graphql.providers.DataFetcherProvider;
 import org.efaps.graphql.providers.EntryPointProvider;
@@ -40,8 +41,6 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
-import graphql.execution.DataFetcherResult;
-import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
@@ -56,18 +55,35 @@ public class GraphQLServlet
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(GraphQLServlet.class);
 
-
-
     @Override
     protected void doGet(final HttpServletRequest _req, final HttpServletResponse _resp)
     {
-        LOG.info("GraphQLServlet");
+        LOG.info("GET GraphQLServlet");
+        final var queryStr = _req.getParameter("query");
+        respond(queryStr, _resp);
+    }
 
-        var queryStr = _req.getParameter("query");
-        if (StringUtils.isEmpty(queryStr)) {
+    @Override
+    protected void doPost(final HttpServletRequest _req, final HttpServletResponse _resp)
+        throws ServletException, IOException
+    {
+        LOG.info("POST GraphQLServlet");
+        final var body = IOUtils.toString(_req.getReader());
+        final var objectMapper = new ObjectMapper();
+        final var map = objectMapper.readValue(body, Map.class);
+        respond((String) map.get("query"), _resp);
+    }
+
+    protected void respond(final String _queryStr, final HttpServletResponse _resp)
+    {
+        String queryStr;
+        if (StringUtils.isEmpty(_queryStr)) {
             queryStr = "{ __schema { types { name fields { name } } } }";
+        } else {
+            queryStr = _queryStr;
         }
         try {
+            LOG.info("Query: {}", queryStr);
             final var executionResult = query(queryStr);
             final var objectMapper = new ObjectMapper();
             final var object = executionResult.getData() == null ? executionResult.getErrors()
@@ -77,16 +93,13 @@ public class GraphQLServlet
             _resp.setCharacterEncoding("UTF-8");
             out.print(objectMapper.writeValueAsString(object));
             out.flush();
-        } catch (final IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (final EFapsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (final IOException | EFapsException e) {
+            LOG.error("Catched", e);
         }
     }
 
-    public ExecutionResult query(final String _query) throws EFapsException
+    public ExecutionResult query(final String _query)
+        throws EFapsException
     {
         final GraphQLContext.Builder contextBldr = GraphQLContext.newContext();
         final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
@@ -105,10 +118,9 @@ public class GraphQLServlet
         final var typeProvider = new TypeProvider();
         Set<GraphQLType> types = null;
         try {
-           types = typeProvider.getTypes(contextBldr);
+            types = typeProvider.getTypes(contextBldr);
         } catch (final EFapsException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Catched", e);
         }
 
         final GraphQLSchema graphQLSchema = GraphQLSchema.newSchema()
@@ -126,21 +138,4 @@ public class GraphQLServlet
         final ExecutionResult executionResult = build.execute(executionInput);
         return executionResult;
     }
-
-
-    public DataFetcher<?> getProductsFetcherFactory() {
-        return (emv) -> {
-            final var selectionSet = emv.getSelectionSet();
-            final var fields = selectionSet.getFields();
-            LOG.info("{}", fields);
-            final var map1 = new HashMap<String, Object>();
-            map1.put("sku", "123.456");
-            final var map2 = new HashMap<String, Object>();
-            map2.put("sku", "333.456");
-            return DataFetcherResult.newResult()
-                            .data(Arrays.asList(map1, map2))
-                            .build();
-        };
-    }
-
 }

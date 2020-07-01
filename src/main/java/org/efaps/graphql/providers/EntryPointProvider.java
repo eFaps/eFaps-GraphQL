@@ -49,10 +49,12 @@ public class EntryPointProvider extends AbstractProvider
         while (eval.next()) {
             final String fieldName = eval.get(CIGraphQL.EntryPointFieldDefinition.Name);
             final FieldType fieldType = eval.get(CIGraphQL.EntryPointFieldDefinition.FieldType);
+            final String fieldDescription = eval.get(CIGraphQL.EntryPointFieldDefinition.Description);
             final String objectName = eval.get("ObjectName");
             LOG.info("EntryPointField: {}", fieldName);
             ret.add(GraphQLFieldDefinition.newFieldDefinition()
                             .name(fieldName)
+                            .description(fieldDescription)
                             .type(evalOutputType(fieldType, objectName))
                             .build());
         }

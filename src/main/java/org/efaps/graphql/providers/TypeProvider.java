@@ -81,12 +81,14 @@ public class TypeProvider extends AbstractProvider
             final var fields = new HashMap<String, FieldDef>();
             while (fieldEval.next()) {
                 final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
+                final String fieldDescription = fieldEval.get(CIGraphQL.FieldDefinition.Description);
                 final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
                 final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
                 final String objectName = fieldEval.get("ObjectName");
                 LOG.info("    Field: {}", fieldName);
                 objectTypeBldr.field(GraphQLFieldDefinition.newFieldDefinition()
                                 .name(fieldName)
+                                .description(fieldDescription)
                                 .type(evalOutputType(fieldType, objectName)));
 
                 fields.put(fieldName, FieldDef.builder()

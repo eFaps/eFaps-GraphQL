@@ -19,7 +19,6 @@ package org.efaps.graphql;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -28,23 +27,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.efaps.graphql.providers.DataFetcherProvider;
-import org.efaps.graphql.providers.EntryPointProvider;
-import org.efaps.graphql.providers.TypeProvider;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import graphql.ExecutionInput;
-import graphql.ExecutionResult;
-import graphql.GraphQL;
-import graphql.GraphQLContext;
-import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
 
 public class GraphQLServlet
     extends HttpServlet
@@ -84,7 +71,7 @@ public class GraphQLServlet
         }
         try {
             LOG.info("Query: {}", queryStr);
-            final var executionResult = query(queryStr);
+            final var executionResult = new EFapsGraphQL().query(queryStr);
             final var objectMapper = new ObjectMapper();
             final var object = executionResult.getData() == null ? executionResult.getErrors()
                             : executionResult.getData();
@@ -96,46 +83,5 @@ public class GraphQLServlet
         } catch (final IOException | EFapsException e) {
             LOG.error("Catched", e);
         }
-    }
-
-    public ExecutionResult query(final String _query)
-        throws EFapsException
-    {
-        final GraphQLContext.Builder contextBldr = GraphQLContext.newContext();
-        final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
-        final var dataFetcherProvider = new DataFetcherProvider();
-        dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
-
-        final var entryPointProvider = new EntryPointProvider();
-
-        final var entryPointFields = entryPointProvider.getFields();
-
-        final var queryType = GraphQLObjectType.newObject()
-                        .name(QUERYNAME)
-                        .fields(entryPointFields)
-                        .build();
-
-        final var typeProvider = new TypeProvider();
-        Set<GraphQLType> types = null;
-        try {
-            types = typeProvider.getTypes(contextBldr);
-        } catch (final EFapsException e) {
-            LOG.error("Catched", e);
-        }
-
-        final GraphQLSchema graphQLSchema = GraphQLSchema.newSchema()
-                        .codeRegistry(registryBldr.build())
-                        .query(queryType)
-                        .additionalTypes(types)
-                        .build();
-        final GraphQL build = GraphQL.newGraphQL(graphQLSchema).build();
-
-        final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
-                        .query(_query)
-                        .context(contextBldr)
-                        .build();
-
-        final ExecutionResult executionResult = build.execute(executionInput);
-        return executionResult;
     }
 }

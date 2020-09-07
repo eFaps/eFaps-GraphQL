@@ -6,8 +6,8 @@ public class GraphQLServletTest
 {
 
     public void test() throws EFapsException {
-        final var graphQLServlet = new GraphQLServlet();
-        graphQLServlet.query("{\n" +
+        final var graphQL = new EFapsGraphQL();
+        graphQL.query("{\n" +
                         "  __schema {\n" +
                         "    types {\n" +
                         "      name\n" +
@@ -18,8 +18,8 @@ public class GraphQLServletTest
 
 
     public void test3() throws EFapsException {
-        final var graphQLServlet = new GraphQLServlet();
-        graphQLServlet.query("{\n" +
+        final var graphQL = new EFapsGraphQL();
+        graphQL.query("{\n" +
                         "  __type(name: \"query\") {\n" +
                         "    name\n" +
                         "    fields {\n" +
@@ -35,8 +35,8 @@ public class GraphQLServletTest
 
 
     public void test2() throws EFapsException {
-        final var graphQLServlet = new GraphQLServlet();
-        graphQLServlet.query("{\n" +
+        final var graphQL = new EFapsGraphQL();
+        graphQL.query("{\n" +
                         "      products {\n" +
                         "        sku" +
                         "      }\n" +

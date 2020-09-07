@@ -48,7 +48,7 @@ public class EFapsGraphQL
 
         final var entryPointProvider = new EntryPointProvider();
 
-        final var entryPointFields = entryPointProvider.getFields();
+        final var entryPointFields = entryPointProvider.getFields(contextBldr);
 
         final var queryType = GraphQLObjectType.newObject()
                         .name(GraphQLServlet.QUERYNAME)

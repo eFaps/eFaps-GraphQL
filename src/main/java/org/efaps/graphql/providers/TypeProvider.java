@@ -16,6 +16,7 @@
  */
 package org.efaps.graphql.providers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,6 +24,7 @@ import java.util.Set;
 import org.efaps.eql.EQL;
 import org.efaps.eql.builder.Selectables;
 import org.efaps.graphql.ci.CIGraphQL;
+import org.efaps.graphql.definition.ArgumentDef;
 import org.efaps.graphql.definition.FieldDef;
 import org.efaps.graphql.definition.ObjectDef;
 import org.efaps.util.EFapsException;
@@ -30,11 +32,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import graphql.GraphQLContext;
+import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 
-public class TypeProvider extends AbstractProvider
+public class TypeProvider
+    extends AbstractProvider
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
@@ -53,7 +57,7 @@ public class TypeProvider extends AbstractProvider
             LOG.info("Type: {}", name);
             final var objectDefBldr = ObjectDef.builder();
             objectDefBldr.withName(name)
-                .withOid(eval.inst().getOid());
+                            .withOid(eval.inst().getOid());
 
             final var objectTypeBldr = GraphQLObjectType.newObject()
                             .name(name);
@@ -73,9 +77,9 @@ public class TypeProvider extends AbstractProvider
                             .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType,
                                             CIGraphQL.FieldDefinition.Select)
                             .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
-                                .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
-                                .attribute(CIGraphQL.ObjectType.Name)
-                                .first().as("ObjectName")
+                            .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
+                            .attribute(CIGraphQL.ObjectType.Name)
+                            .first().as("ObjectName")
                             .evaluate();
 
             final var fields = new HashMap<String, FieldDef>();
@@ -86,14 +90,47 @@ public class TypeProvider extends AbstractProvider
                 final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
                 final String objectName = fieldEval.get("ObjectName");
                 LOG.info("    Field: {}", fieldName);
-                objectTypeBldr.field(GraphQLFieldDefinition.newFieldDefinition()
+
+                final var arguments = new ArrayList<GraphQLArgument>();
+                final var argumentEval = EQL.builder().print()
+                                .query(CIGraphQL.Argument)
+                                .where()
+                                .attribute(CIGraphQL.Argument.FieldLink).eq(fieldEval.inst())
+                                .select()
+                                .attribute(CIGraphQL.Argument.Name, CIGraphQL.Argument.Description,
+                                                CIGraphQL.Argument.ArgumentType, CIGraphQL.Argument.WhereStmt)
+                                .evaluate();
+                final var argumentDefs = new ArrayList<ArgumentDef>();
+                while (argumentEval.next()) {
+                    final String argumentName = argumentEval.get(CIGraphQL.Argument.Name);
+                    final String argumentDesc = argumentEval.get(CIGraphQL.Argument.Description);
+                    final String argumentWhereStmt = argumentEval.get(CIGraphQL.Argument.WhereStmt);
+                    final FieldType argumentType = argumentEval.get(CIGraphQL.Argument.ArgumentType);
+                    final var argument = GraphQLArgument.newArgument()
+                                    .name(argumentName)
+                                    .description(argumentDesc)
+                                    .type(evalInputType(argumentType))
+                                    .build();
+                    argumentDefs.add(ArgumentDef.builder()
+                                    .withName(argumentName)
+                                    .withWhereStmt(argumentWhereStmt)
+                                    .build());
+                    arguments.add(argument);
+                }
+                final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()
                                 .name(fieldName)
                                 .description(fieldDescription)
-                                .type(evalOutputType(fieldType, objectName)));
+                                .arguments(arguments)
+                                .type(evalOutputType(fieldType, objectName))
+                                .build();
+                objectTypeBldr.field(fieldDef);
+
+                LOG.info("....{}", fieldDef);
 
                 fields.put(fieldName, FieldDef.builder()
                                 .withName(fieldName)
                                 .withSelect(select)
+                                .withArguments(argumentDefs)
                                 .build());
             }
             ret.add(objectTypeBldr.build());

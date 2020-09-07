@@ -17,6 +17,7 @@
 package org.efaps.graphql.providers;
 
 import graphql.Scalars;
+import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLTypeReference;
@@ -36,6 +37,30 @@ public abstract class AbstractProvider
                 break;
             case OBJECTLIST:
                 ret = GraphQLList.list(GraphQLTypeReference.typeRef(_objectName));
+                break;
+            case BOOLEAN:
+                ret = Scalars.GraphQLBoolean;
+                break;
+            case INT:
+                ret = Scalars.GraphQLInt;
+                break;
+            case LONG:
+                ret = Scalars.GraphQLLong;
+                break;
+            case STRING:
+            default:
+                ret = Scalars.GraphQLString;
+                break;
+        }
+        return ret;
+    }
+
+    protected GraphQLInputType evalInputType(final FieldType _fieldType)
+    {
+        GraphQLInputType ret;
+        switch (_fieldType) {
+            case BIGDECIMAL:
+                ret = Scalars.GraphQLBigDecimal;
                 break;
             case BOOLEAN:
                 ret = Scalars.GraphQLBoolean;

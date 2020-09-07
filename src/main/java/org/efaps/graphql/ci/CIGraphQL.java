@@ -82,6 +82,18 @@ public final class CIGraphQL
         public final CIAttribute Value = new CIAttribute(this, "Value");
     }
 
+    public static final _Argument Argument = new _Argument("b01cd270-95ec-4280-ba9b-53e2f95e4e7e");
+    public static class _Argument extends _ElementAbstract
+    {
+        protected _Argument(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute FieldLink = new CIAttribute(this, "FieldLink");
+        public final CIAttribute ArgumentType = new CIAttribute(this, "ArgumentType");
+        public final CIAttribute WhereStmt = new CIAttribute(this, "WhereStmt");
+    }
+
     public static final _Object2ObjectAbstract Object2ObjectAbstract = new _Object2ObjectAbstract("302f2d7a-eba6-48f2-909b-c99973c55ba1");
     public static class _Object2ObjectAbstract extends CIType
     {

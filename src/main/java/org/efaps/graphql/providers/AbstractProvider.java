@@ -17,6 +17,7 @@
 package org.efaps.graphql.providers;
 
 import graphql.Scalars;
+import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
@@ -30,7 +31,7 @@ public abstract class AbstractProvider
         GraphQLOutputType ret;
         switch (_fieldType) {
             case BIGDECIMAL:
-                ret = Scalars.GraphQLBigDecimal;
+                ret = ExtendedScalars.GraphQLBigDecimal;
                 break;
             case OBJECT:
                 ret = GraphQLTypeReference.typeRef(_objectName);
@@ -45,7 +46,7 @@ public abstract class AbstractProvider
                 ret = Scalars.GraphQLInt;
                 break;
             case LONG:
-                ret = Scalars.GraphQLLong;
+                ret = ExtendedScalars.GraphQLLong;
                 break;
             case STRING:
             default:
@@ -60,7 +61,7 @@ public abstract class AbstractProvider
         GraphQLInputType ret;
         switch (_fieldType) {
             case BIGDECIMAL:
-                ret = Scalars.GraphQLBigDecimal;
+                ret = ExtendedScalars.GraphQLBigDecimal;
                 break;
             case BOOLEAN:
                 ret = Scalars.GraphQLBoolean;
@@ -69,7 +70,7 @@ public abstract class AbstractProvider
                 ret = Scalars.GraphQLInt;
                 break;
             case LONG:
-                ret = Scalars.GraphQLLong;
+                ret = ExtendedScalars.GraphQLLong;
                 break;
             case STRING:
             default:

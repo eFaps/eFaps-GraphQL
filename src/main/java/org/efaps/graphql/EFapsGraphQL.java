@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2020 The eFaps Team
+ * Copyright 2003 - 2022 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.efaps.graphql;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.efaps.graphql.providers.DataFetcherProvider;
 import org.efaps.graphql.providers.EntryPointProvider;
@@ -36,46 +37,53 @@ import graphql.schema.GraphQLType;
 
 public class EFapsGraphQL
 {
+
     private static final Logger LOG = LoggerFactory.getLogger(EFapsGraphQL.class);
 
     public ExecutionResult query(final String _query)
         throws EFapsException
     {
-        final GraphQLContext.Builder contextBldr = GraphQLContext.newContext();
-        final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
-        final var dataFetcherProvider = new DataFetcherProvider();
-        dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
-
-        final var entryPointProvider = new EntryPointProvider();
-
-        final var entryPointFields = entryPointProvider.getFields(contextBldr);
-
-        final var queryType = GraphQLObjectType.newObject()
-                        .name(GraphQLServlet.QUERYNAME)
-                        .fields(entryPointFields)
-                        .build();
-
-        final var typeProvider = new TypeProvider();
-        Set<GraphQLType> types = null;
-        try {
-            types = typeProvider.getTypes(contextBldr);
-        } catch (final EFapsException e) {
-            LOG.error("Catched", e);
-        }
-
-        final GraphQLSchema graphQLSchema = GraphQLSchema.newSchema()
-                        .codeRegistry(registryBldr.build())
-                        .query(queryType)
-                        .additionalTypes(types)
-                        .build();
-        final GraphQL build = GraphQL.newGraphQL(graphQLSchema).build();
+        final var schemaBldr = GraphQLSchema.newSchema();
+        final var ctx = withContext(schemaBldr);
 
         final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
                         .query(_query)
-                        .context(contextBldr)
+                        .graphQLContext(ctx)
                         .build();
-
+        final GraphQL build = GraphQL.newGraphQL(schemaBldr.build()).build();
         final ExecutionResult executionResult = build.execute(executionInput);
         return executionResult;
     }
+
+    protected Consumer<GraphQLContext.Builder> withContext(final GraphQLSchema.Builder schemaBldr)
+    {
+        return contextBldr -> {
+            try {
+
+                final var dataFetcherProvider = new DataFetcherProvider();
+                final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
+                dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
+                final var entryPointProvider = new EntryPointProvider();
+
+                final var entryPointFields = entryPointProvider.getFields(contextBldr);
+                final var queryType = GraphQLObjectType.newObject()
+                                .name(GraphQLServlet.QUERYNAME)
+                                .fields(entryPointFields)
+                                .build();
+
+                final var typeProvider = new TypeProvider();
+                Set<GraphQLType> types = null;
+                types = typeProvider.getTypes(contextBldr);
+
+                schemaBldr.codeRegistry(registryBldr.build())
+                                .query(queryType)
+                                .additionalTypes(types);
+
+            } catch (final EFapsException e) {
+                LOG.error("Catched {}", e);
+                e.printStackTrace();
+            }
+        };
+    }
+
 }

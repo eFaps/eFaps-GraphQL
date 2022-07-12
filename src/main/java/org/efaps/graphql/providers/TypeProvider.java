@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2020 The eFaps Team
+ * Copyright 2003 - 2022 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class TypeProvider
                         .evaluate();
         while (eval.next()) {
             final String name = eval.get(CIGraphQL.ObjectType.Name);
-            LOG.info("Type: {}", name);
+            LOG.info("ObjectDef: {}", name);
             final var objectDefBldr = ObjectDef.builder();
             objectDefBldr.withName(name)
                             .withOid(eval.inst().getOid());
@@ -125,7 +125,7 @@ public class TypeProvider
                                 .build();
                 objectTypeBldr.field(fieldDef);
 
-                LOG.info("....{}", fieldDef);
+                LOG.debug("....{}", fieldDef);
 
                 fields.put(fieldName, FieldDef.builder()
                                 .withName(fieldName)

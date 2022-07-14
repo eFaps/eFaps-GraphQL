@@ -84,6 +84,7 @@ public class EntryPointProvider extends AbstractProvider
                 arguments.add(argument);
                 argumentDefs.add(ArgumentDef.builder()
                     .withName(argumentName)
+                    .withFieldType(argumentType)
                     .withWhereStmt(argumentWhereStmt)
                     .build());
             }
@@ -93,8 +94,10 @@ public class EntryPointProvider extends AbstractProvider
                 .arguments(arguments)
                 .type(evalOutputType(fieldType, objectName))
                 .build();
-            LOG.info("....{}", fieldDef);
+
+            LOG.debug("....{}", fieldDef);
             ret.add(fieldDef);
+
             fields.put(fieldName, FieldDef.builder()
                             .withName(fieldName)
                             .withArguments(argumentDefs)

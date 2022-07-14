@@ -48,6 +48,12 @@ public abstract class AbstractProvider
             case LONG:
                 ret = ExtendedScalars.GraphQLLong;
                 break;
+            case DATE:
+                ret = ExtendedScalars.Date;
+                break;
+            case DATETIME:
+                ret = ExtendedScalars.DateTime;
+                break;
             case STRING:
             default:
                 ret = Scalars.GraphQLString;
@@ -71,6 +77,12 @@ public abstract class AbstractProvider
                 break;
             case LONG:
                 ret = ExtendedScalars.GraphQLLong;
+                break;
+            case DATE:
+                ret = ExtendedScalars.Date;
+                break;
+            case DATETIME:
+                ret = ExtendedScalars.DateTime;
                 break;
             case STRING:
             default:

@@ -113,6 +113,7 @@ public class TypeProvider
                                     .build();
                     argumentDefs.add(ArgumentDef.builder()
                                     .withName(argumentName)
+                                    .withFieldType(fieldType)
                                     .withWhereStmt(argumentWhereStmt)
                                     .build());
                     arguments.add(argument);

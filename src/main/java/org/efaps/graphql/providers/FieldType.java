@@ -27,7 +27,9 @@ public enum FieldType implements IEnum
     OBJECTLIST,
     INT,
     LONG,
-    BOOLEAN;
+    BOOLEAN,
+    DATE,
+    DATETIME;
 
     @Override
     public int getInt()

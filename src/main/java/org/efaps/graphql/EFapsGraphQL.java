@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 
 import org.efaps.graphql.providers.DataFetcherProvider;
 import org.efaps.graphql.providers.EntryPointProvider;
+import org.efaps.graphql.providers.MutationProvider;
 import org.efaps.graphql.providers.TypeProvider;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
@@ -63,9 +64,8 @@ public class EFapsGraphQL
                 final var dataFetcherProvider = new DataFetcherProvider();
                 final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
                 dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
-                final var entryPointProvider = new EntryPointProvider();
 
-                final var entryPointFields = entryPointProvider.getFields(contextBldr);
+                final var entryPointFields = new EntryPointProvider().getFields(contextBldr);
                 final var queryType = GraphQLObjectType.newObject()
                                 .name(GraphQLServlet.QUERYNAME)
                                 .fields(entryPointFields)
@@ -75,8 +75,15 @@ public class EFapsGraphQL
                 Set<GraphQLType> types = null;
                 types = typeProvider.getTypes(contextBldr);
 
+                final var mutationFields = new MutationProvider().getFields(contextBldr);
+                final var mutationType = GraphQLObjectType.newObject()
+                                .name(GraphQLServlet.MUTATIONNAME)
+                                .fields(mutationFields)
+                                .build();
+
                 schemaBldr.codeRegistry(registryBldr.build())
                                 .query(queryType)
+                                .mutation(mutationType)
                                 .additionalTypes(types);
 
             } catch (final EFapsException e) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2020 The eFaps Team
+ * Copyright 2003 - 2022 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,33 +34,34 @@ import graphql.GraphQLContext;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 
-public class EntryPointProvider extends AbstractProvider
+public class MutationProvider
+    extends AbstractProvider
 {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EntryPointProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MutationProvider.class);
 
     public List<GraphQLFieldDefinition> getFields(final GraphQLContext.Builder _contextBldr)
         throws EFapsException
     {
         final var ret = new ArrayList<GraphQLFieldDefinition>();
-        final var eval = EQL.builder().print()
-                        .query(CIGraphQL.EntryPointFieldDefinition)
-                        .select()
-                        .attribute(CIGraphQL.EntryPointFieldDefinition.Name,
-                                   CIGraphQL.EntryPointFieldDefinition.FieldType,
-                                   CIGraphQL.EntryPointFieldDefinition.Description)
-                        .linkfrom(CIGraphQL.EntryPointFieldDefinition2ObjectType.FromLink)
-                            .linkto(CIGraphQL.EntryPointFieldDefinition2ObjectType.ToLink)
-                            .attribute(CIGraphQL.ObjectType.Name)
-                            .first().as("ObjectName")
-                        .evaluate();
         final var fields = new HashMap<String, FieldDef>();
+        final var eval = EQL.builder().print()
+                        .query(CIGraphQL.MutationFieldDefinition)
+                        .select()
+                        .attribute(CIGraphQL.MutationFieldDefinition.Name,
+                                        CIGraphQL.MutationFieldDefinition.FieldType,
+                                        CIGraphQL.MutationFieldDefinition.Description)
+                        .linkfrom(CIGraphQL.MutationFieldDefinition2ObjectType.FromLink)
+                        .linkto(CIGraphQL.MutationFieldDefinition2ObjectType.ToLink)
+                        .attribute(CIGraphQL.ObjectType.Name)
+                        .first().as("ObjectName")
+                        .evaluate();
         while (eval.next()) {
-            final String fieldName = eval.get(CIGraphQL.EntryPointFieldDefinition.Name);
-            final FieldType fieldType = eval.get(CIGraphQL.EntryPointFieldDefinition.FieldType);
-            final String fieldDescription = eval.get(CIGraphQL.EntryPointFieldDefinition.Description);
+            final String fieldName = eval.get(CIGraphQL.MutationFieldDefinition.Name);
+            final FieldType fieldType = eval.get(CIGraphQL.MutationFieldDefinition.FieldType);
+            final String fieldDescription = eval.get(CIGraphQL.MutationFieldDefinition.Description);
             final String objectName = eval.get("ObjectName");
-            LOG.info("EntryPointField: {}", fieldName);
+            LOG.info("MutationField: {}", fieldName);
 
             final var arguments = new ArrayList<GraphQLArgument>();
             final var argumentEval = EQL.builder().print()
@@ -84,17 +85,17 @@ public class EntryPointProvider extends AbstractProvider
                                 .build();
                 arguments.add(argument);
                 argumentDefs.add(ArgumentDef.builder()
-                    .withName(argumentName)
-                    .withFieldType(argumentType)
-                    .withWhereStmt(argumentWhereStmt)
-                    .build());
+                                .withName(argumentName)
+                                .withFieldType(argumentType)
+                                .withWhereStmt(argumentWhereStmt)
+                                .build());
             }
             final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()
-                .name(fieldName)
-                .description(fieldDescription)
-                .arguments(arguments)
-                .type(evalOutputType(fieldType, objectName))
-                .build();
+                            .name(fieldName)
+                            .description(fieldDescription)
+                            .arguments(arguments)
+                            .type(evalOutputType(fieldType, objectName))
+                            .build();
 
             LOG.debug("....{}", fieldDef);
             ret.add(fieldDef);
@@ -104,8 +105,8 @@ public class EntryPointProvider extends AbstractProvider
                             .withArguments(argumentDefs)
                             .build());
         }
-        final var objectDefBldr = ObjectDef.builder();
-        _contextBldr.of(GraphQLServlet.QUERYNAME, objectDefBldr.withFields(fields).build());
+
+        _contextBldr.of(GraphQLServlet.MUTATIONNAME, ObjectDef.builder().withFields(fields).build());
         return ret;
     }
 }

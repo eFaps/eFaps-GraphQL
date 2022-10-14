@@ -60,6 +60,16 @@ public final class CIGraphQL
         }
     }
 
+    public static final _MutationFieldDefinition MutationFieldDefinition = new _MutationFieldDefinition("fd5a6c8c-9e98-4c33-8c6b-52cac9a0773f");
+    public static class _MutationFieldDefinition extends _FieldDefinitionAbstract
+    {
+        protected _MutationFieldDefinition(final String _uuid)
+        {
+            super(_uuid);
+        }
+    }
+
+
     public static final _DataFetcher DataFetcher = new _DataFetcher("701c7ea8-0213-4e18-8867-08e6861fb2fe");
     public static class _DataFetcher extends _ElementAbstract
     {
@@ -124,6 +134,17 @@ public final class CIGraphQL
     public static class _EntryPointFieldDefinition2ObjectType extends _Object2ObjectAbstract
     {
         protected _EntryPointFieldDefinition2ObjectType(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute FromLink = new CIAttribute(this, "FromLink");
+        public final CIAttribute ToLink = new CIAttribute(this, "ToLink");
+    }
+
+    public static final _MutationFieldDefinition2ObjectType MutationFieldDefinition2ObjectType = new _MutationFieldDefinition2ObjectType("347e1427-cfdb-4ef3-9c3e-12b7eea6b9c1");
+    public static class _MutationFieldDefinition2ObjectType extends _Object2ObjectAbstract
+    {
+        protected _MutationFieldDefinition2ObjectType(final String _uuid)
         {
             super(_uuid);
         }

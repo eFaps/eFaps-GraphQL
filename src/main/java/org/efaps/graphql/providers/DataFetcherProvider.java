@@ -64,6 +64,13 @@ public class DataFetcherProvider
                             .evaluate()
                         .get(CIGraphQL.EntryPointFieldDefinition.Name);
                     typeName = GraphQLServlet.QUERYNAME;
+                } else if (fieldInstance.getType().equals(CIGraphQL.MutationFieldDefinition.getType())) {
+                    fieldName = EQL.builder()
+                                    .print(fieldInstance)
+                                    .attribute(CIGraphQL.MutationFieldDefinition.Name)
+                                .evaluate()
+                            .get(CIGraphQL.MutationFieldDefinition.Name);
+                    typeName = GraphQLServlet.MUTATIONNAME;
                 } else {
                     final var fieldEval = EQL.builder()
                                     .print(fieldInstance)

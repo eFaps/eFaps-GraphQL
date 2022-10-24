@@ -60,7 +60,6 @@ public class EFapsGraphQL
     {
         return contextBldr -> {
             try {
-
                 final var dataFetcherProvider = new DataFetcherProvider();
                 final var registryBldr = GraphQLCodeRegistry.newCodeRegistry();
                 dataFetcherProvider.addDataFetchers(registryBldr, contextBldr);
@@ -74,17 +73,18 @@ public class EFapsGraphQL
                 final var typeProvider = new TypeProvider();
                 Set<GraphQLType> types = null;
                 types = typeProvider.getTypes(contextBldr);
+                schemaBldr.codeRegistry(registryBldr.build())
+                    .query(queryType)
+                    .additionalTypes(types);
 
                 final var mutationFields = new MutationProvider().getFields(contextBldr);
-                final var mutationType = GraphQLObjectType.newObject()
+                if (!mutationFields.isEmpty()) {
+                    final var mutationType = GraphQLObjectType.newObject()
                                 .name(GraphQLServlet.MUTATIONNAME)
                                 .fields(mutationFields)
                                 .build();
-
-                schemaBldr.codeRegistry(registryBldr.build())
-                                .query(queryType)
-                                .mutation(mutationType)
-                                .additionalTypes(types);
+                    schemaBldr.mutation(mutationType);
+                }
 
             } catch (final EFapsException e) {
                 LOG.error("Catched {}", e);

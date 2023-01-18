@@ -1,5 +1,6 @@
 package org.efaps.graphql.definition;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.efaps.graphql.providers.FieldType;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -32,6 +33,12 @@ public class ArgumentDef
     public String getWhereStmt()
     {
         return whereStmt;
+    }
+
+    @Override
+    public String toString()
+    {
+        return ToStringBuilder.reflectionToString(this);
     }
 
     /**

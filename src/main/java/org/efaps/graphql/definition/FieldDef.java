@@ -3,6 +3,8 @@ package org.efaps.graphql.definition;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(builder = FieldDef.Builder.class)
@@ -33,6 +35,12 @@ public class FieldDef
     public List<ArgumentDef> getArguments()
     {
         return arguments;
+    }
+
+    @Override
+    public String toString()
+    {
+        return ToStringBuilder.reflectionToString(this);
     }
 
     /**

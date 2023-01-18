@@ -54,7 +54,7 @@ public class TypeProvider
                         .evaluate();
         while (eval.next()) {
             final String name = eval.get(CIGraphQL.ObjectType.Name);
-            LOG.info("ObjectDef: {}", name);
+            LOG.debug("ObjectDef: {}", name);
             final var objectDefBldr = ObjectDef.builder();
             objectDefBldr.withName(name)
                             .withOid(eval.inst().getOid());
@@ -89,7 +89,7 @@ public class TypeProvider
                 final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
                 final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
                 final String objectName = fieldEval.get("ObjectName");
-                LOG.info("    Field: {}", fieldName);
+                LOG.debug("    Field: {}", fieldName);
 
                 final var arguments = new ArrayList<GraphQLArgument>();
                 final var argumentEval = EQL.builder().print()
@@ -134,6 +134,7 @@ public class TypeProvider
                                 .withArguments(argumentDefs)
                                 .build());
             }
+            LOG.info("Read type: '{}' with {}", name, fields);
             ret.add(objectTypeBldr.build());
             _contextBldr.of(name, objectDefBldr.withFields(fields).build());
         }

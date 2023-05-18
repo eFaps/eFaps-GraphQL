@@ -92,16 +92,37 @@ public final class CIGraphQL
         public final CIAttribute Value = new CIAttribute(this, "Value");
     }
 
-    public static final _Argument Argument = new _Argument("b01cd270-95ec-4280-ba9b-53e2f95e4e7e");
-    public static class _Argument extends _ElementAbstract
+    public static final _ArgumentAbstract ArgumentAbstract = new _ArgumentAbstract("a32705df-2c5c-41f8-a45c-f28acefefee0");
+    public static class _ArgumentAbstract extends _ElementAbstract
     {
-        protected _Argument(final String _uuid)
+        protected _ArgumentAbstract(final String _uuid)
         {
             super(_uuid);
         }
         public final CIAttribute FieldLink = new CIAttribute(this, "FieldLink");
         public final CIAttribute ArgumentType = new CIAttribute(this, "ArgumentType");
+    }
+
+
+    public static final _Argument Argument = new _Argument("b01cd270-95ec-4280-ba9b-53e2f95e4e7e");
+    public static class _Argument extends _ArgumentAbstract
+    {
+        protected _Argument(final String _uuid)
+        {
+            super(_uuid);
+        }
+
         public final CIAttribute WhereStmt = new CIAttribute(this, "WhereStmt");
+    }
+
+    public static final _MutationArgument MutationArgument = new _MutationArgument("c1004bc1-76f7-42ca-bc20-8a517abc17cf");
+    public static class _MutationArgument extends _ArgumentAbstract
+    {
+        protected _MutationArgument(final String _uuid)
+        {
+            super(_uuid);
+        }
+        public final CIAttribute Key = new CIAttribute(this, "Key");
     }
 
     public static final _Object2ObjectAbstract Object2ObjectAbstract = new _Object2ObjectAbstract("302f2d7a-eba6-48f2-909b-c99973c55ba1");

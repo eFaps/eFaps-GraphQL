@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2022 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,19 +65,19 @@ public class MutationProvider
 
             final var arguments = new ArrayList<GraphQLArgument>();
             final var argumentEval = EQL.builder().print()
-                            .query(CIGraphQL.Argument)
+                            .query(CIGraphQL.MutationArgument)
                             .where()
-                            .attribute(CIGraphQL.Argument.FieldLink).eq(eval.inst())
+                            .attribute(CIGraphQL.MutationArgument.FieldLink).eq(eval.inst())
                             .select()
-                            .attribute(CIGraphQL.Argument.Name, CIGraphQL.Argument.Description,
-                                            CIGraphQL.Argument.ArgumentType, CIGraphQL.Argument.WhereStmt)
+                            .attribute(CIGraphQL.MutationArgument.Name, CIGraphQL.MutationArgument.Description,
+                                            CIGraphQL.MutationArgument.ArgumentType, CIGraphQL.MutationArgument.Key)
                             .evaluate();
             final var argumentDefs = new ArrayList<ArgumentDef>();
             while (argumentEval.next()) {
-                final String argumentName = argumentEval.get(CIGraphQL.Argument.Name);
-                final String argumentDesc = argumentEval.get(CIGraphQL.Argument.Description);
-                final String argumentWhereStmt = argumentEval.get(CIGraphQL.Argument.WhereStmt);
-                final FieldType argumentType = argumentEval.get(CIGraphQL.Argument.ArgumentType);
+                final String argumentName = argumentEval.get(CIGraphQL.MutationArgument.Name);
+                final String argumentDesc = argumentEval.get(CIGraphQL.MutationArgument.Description);
+                final String argumentKey = argumentEval.get(CIGraphQL.MutationArgument.Key);
+                final FieldType argumentType = argumentEval.get(CIGraphQL.MutationArgument.ArgumentType);
                 final var argument = GraphQLArgument.newArgument()
                                 .name(argumentName)
                                 .description(argumentDesc)
@@ -87,7 +87,7 @@ public class MutationProvider
                 argumentDefs.add(ArgumentDef.builder()
                                 .withName(argumentName)
                                 .withFieldType(argumentType)
-                                .withWhereStmt(argumentWhereStmt)
+                                .withKey(argumentKey)
                                 .build());
             }
             final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()

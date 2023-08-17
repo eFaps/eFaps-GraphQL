@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2020 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.efaps.eql.EQL;
-import org.efaps.graphql.GraphQLServlet;
 import org.efaps.graphql.ci.CIGraphQL;
 import org.efaps.graphql.definition.ArgumentDef;
 import org.efaps.graphql.definition.FieldDef;
 import org.efaps.graphql.definition.ObjectDef;
+import org.efaps.graphql.util.Utils;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +105,7 @@ public class EntryPointProvider extends AbstractProvider
                             .build());
         }
         final var objectDefBldr = ObjectDef.builder();
-        _contextBldr.of(GraphQLServlet.QUERYNAME, objectDefBldr.withFields(fields).build());
+        _contextBldr.of(Utils.QUERYNAME, objectDefBldr.withFields(fields).build());
         return ret;
     }
 }

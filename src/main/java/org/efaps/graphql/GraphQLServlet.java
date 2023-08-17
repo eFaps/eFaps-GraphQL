@@ -37,9 +37,6 @@ public class GraphQLServlet
     extends HttpServlet
 {
 
-    public static String QUERYNAME = "query";
-    public static String MUTATIONNAME = "mutation";
-
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(GraphQLServlet.class);
 

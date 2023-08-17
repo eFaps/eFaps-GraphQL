@@ -23,6 +23,7 @@ import org.efaps.graphql.providers.DataFetcherProvider;
 import org.efaps.graphql.providers.EntryPointProvider;
 import org.efaps.graphql.providers.MutationProvider;
 import org.efaps.graphql.providers.TypeProvider;
+import org.efaps.graphql.util.Utils;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class EFapsGraphQL
 
                 final var entryPointFields = new EntryPointProvider().getFields(contextBldr);
                 final var queryType = GraphQLObjectType.newObject()
-                                .name(GraphQLServlet.QUERYNAME)
+                                .name(Utils.QUERYNAME)
                                 .fields(entryPointFields)
                                 .build();
 
@@ -80,7 +81,7 @@ public class EFapsGraphQL
                 final var mutationFields = new MutationProvider().getFields(contextBldr);
                 if (!mutationFields.isEmpty()) {
                     final var mutationType = GraphQLObjectType.newObject()
-                                .name(GraphQLServlet.MUTATIONNAME)
+                                .name(Utils.MUTATIONNAME)
                                 .fields(mutationFields)
                                 .build();
                     schemaBldr.mutation(mutationType);

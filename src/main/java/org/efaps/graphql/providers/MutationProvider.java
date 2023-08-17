@@ -21,11 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.efaps.eql.EQL;
-import org.efaps.graphql.GraphQLServlet;
 import org.efaps.graphql.ci.CIGraphQL;
 import org.efaps.graphql.definition.ArgumentDef;
 import org.efaps.graphql.definition.FieldDef;
 import org.efaps.graphql.definition.ObjectDef;
+import org.efaps.graphql.util.Utils;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +106,7 @@ public class MutationProvider
                             .build());
         }
 
-        _contextBldr.of(GraphQLServlet.MUTATIONNAME, ObjectDef.builder().withFields(fields).build());
+        _contextBldr.of(Utils.MUTATIONNAME, ObjectDef.builder().withFields(fields).build());
         return ret;
     }
 }

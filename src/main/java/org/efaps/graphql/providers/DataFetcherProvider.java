@@ -23,8 +23,8 @@ import java.util.HashMap;
 import org.efaps.admin.program.esjp.EFapsClassLoader;
 import org.efaps.db.Instance;
 import org.efaps.eql.EQL;
-import org.efaps.graphql.GraphQLServlet;
 import org.efaps.graphql.ci.CIGraphQL;
+import org.efaps.graphql.util.Utils;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,14 +63,14 @@ public class DataFetcherProvider
                                 .attribute(CIGraphQL.EntryPointFieldDefinition.Name)
                             .evaluate()
                         .get(CIGraphQL.EntryPointFieldDefinition.Name);
-                    typeName = GraphQLServlet.QUERYNAME;
+                    typeName = Utils.QUERYNAME;
                 } else if (fieldInstance.getType().equals(CIGraphQL.MutationFieldDefinition.getType())) {
                     fieldName = EQL.builder()
                                     .print(fieldInstance)
                                     .attribute(CIGraphQL.MutationFieldDefinition.Name)
                                 .evaluate()
                             .get(CIGraphQL.MutationFieldDefinition.Name);
-                    typeName = GraphQLServlet.MUTATIONNAME;
+                    typeName = Utils.MUTATIONNAME;
                 } else {
                     final var fieldEval = EQL.builder()
                                     .print(fieldInstance)

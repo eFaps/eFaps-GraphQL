@@ -71,6 +71,10 @@ public class MutationProvider
                             .select()
                             .attribute(CIGraphQL.MutationArgument.Name, CIGraphQL.MutationArgument.Description,
                                             CIGraphQL.MutationArgument.ArgumentType, CIGraphQL.MutationArgument.Key)
+                            .linkfrom(CIGraphQL.MutationArgument2ObjectType.FromLink)
+                            .linkto(CIGraphQL.MutationArgument2ObjectType.ToLink)
+                            .attribute(CIGraphQL.ObjectType.Name)
+                            .first().as("ObjectName")
                             .evaluate();
             final var argumentDefs = new ArrayList<ArgumentDef>();
             while (argumentEval.next()) {
@@ -78,10 +82,11 @@ public class MutationProvider
                 final String argumentDesc = argumentEval.get(CIGraphQL.MutationArgument.Description);
                 final String argumentKey = argumentEval.get(CIGraphQL.MutationArgument.Key);
                 final FieldType argumentType = argumentEval.get(CIGraphQL.MutationArgument.ArgumentType);
+                final String argumentObject = argumentEval.get("ObjectName");
                 final var argument = GraphQLArgument.newArgument()
                                 .name(argumentName)
                                 .description(argumentDesc)
-                                .type(evalInputType(argumentType))
+                                .type(evalInputType(argumentType, argumentObject))
                                 .build();
                 arguments.add(argument);
                 argumentDefs.add(ArgumentDef.builder()
@@ -89,6 +94,7 @@ public class MutationProvider
                                 .withFieldType(argumentType)
                                 .withKey(argumentKey)
                                 .build());
+
             }
             final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()
                             .name(fieldName)

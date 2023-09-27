@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
 import graphql.GraphQLContext;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLInputObjectField;
+import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 
@@ -43,7 +45,16 @@ public class TypeProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
 
-    public Set<GraphQLType> getTypes(final GraphQLContext.Builder _contextBldr)
+    public Set<GraphQLType> getTypes(final GraphQLContext.Builder contextBldr)
+        throws EFapsException
+    {
+        final var ret = new HashSet<GraphQLType>();
+        ret.addAll(getObjectTypes(contextBldr));
+        ret.addAll(getInputTypes(contextBldr));
+        return ret;
+    }
+
+    private Set<GraphQLType> getObjectTypes(final GraphQLContext.Builder _contextBldr)
         throws EFapsException
     {
         final var ret = new HashSet<GraphQLType>();
@@ -132,6 +143,75 @@ public class TypeProvider
                                 .withName(fieldName)
                                 .withSelect(select)
                                 .withArguments(argumentDefs)
+                                .build());
+            }
+            LOG.info("Read type: '{}' with {}", name, fields);
+            ret.add(objectTypeBldr.build());
+            _contextBldr.of(name, objectDefBldr.withFields(fields).build());
+        }
+        return ret;
+    }
+
+    private Set<GraphQLType> getInputTypes(final GraphQLContext.Builder _contextBldr)
+        throws EFapsException
+    {
+        final var ret = new HashSet<GraphQLType>();
+        final var eval = EQL.builder().print()
+                        .query(CIGraphQL.InputObjectType)
+                        .select()
+                        .attribute(CIGraphQL.InputObjectType.Name)
+                        .evaluate();
+        while (eval.next()) {
+            final String name = eval.get(CIGraphQL.InputObjectType.Name);
+            LOG.debug("ObjectDef: {}", name);
+            final var objectDefBldr = ObjectDef.builder();
+            objectDefBldr.withName(name)
+                            .withOid(eval.inst().getOid());
+
+            final var objectTypeBldr = GraphQLInputObjectType.newInputObject()
+                            .name(name);
+
+            final var fieldEval = EQL.builder().print()
+                            .query(CIGraphQL.FieldDefinition)
+                            .where()
+                            .attribute(CIGraphQL.FieldDefinition.ID)
+                            .in(EQL.builder()
+                                            .nestedQuery(CIGraphQL.ObjectType2FieldDefinition)
+                                            .where()
+                                            .attribute(CIGraphQL.ObjectType2FieldDefinition.FromID).eq(eval.inst())
+                                            .up()
+                                            .selectable(Selectables
+                                                            .attribute(CIGraphQL.ObjectType2FieldDefinition.ToID)))
+                            .select()
+                            .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType,
+                                            CIGraphQL.FieldDefinition.Select)
+                            .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
+                            .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
+                            .attribute(CIGraphQL.ObjectType.Name)
+                            .first().as("ObjectName")
+                            .evaluate();
+
+            final var fields = new HashMap<String, FieldDef>();
+            while (fieldEval.next()) {
+                final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
+                final String fieldDescription = fieldEval.get(CIGraphQL.FieldDefinition.Description);
+                final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
+                final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
+                final String objectName = fieldEval.get("ObjectName");
+                LOG.debug("    Field: {}", fieldName);
+
+                final var fieldDef = GraphQLInputObjectField.newInputObjectField()
+                                .name(fieldName)
+                                .description(fieldDescription)
+                                .type(evalInputType(fieldType, objectName))
+                                .build();
+                objectTypeBldr.field(fieldDef);
+
+                LOG.debug("....{}", fieldDef);
+
+                fields.put(fieldName, FieldDef.builder()
+                                .withName(fieldName)
+                                .withSelect(select)
                                 .build());
             }
             LOG.info("Read type: '{}' with {}", name, fields);

@@ -26,7 +26,8 @@ import graphql.schema.GraphQLTypeReference;
 public abstract class AbstractProvider
 {
 
-    protected GraphQLOutputType evalOutputType(final FieldType _fieldType, final String _objectName)
+    protected GraphQLOutputType evalOutputType(final FieldType _fieldType,
+                                               final String _objectName)
     {
         GraphQLOutputType ret;
         switch (_fieldType) {
@@ -62,7 +63,13 @@ public abstract class AbstractProvider
         return ret;
     }
 
-    protected GraphQLInputType evalInputType(final FieldType _fieldType)
+    protected GraphQLInputType evalInputType(final FieldType fieldType)
+    {
+        return evalInputType(fieldType, null);
+    }
+
+    protected GraphQLInputType evalInputType(final FieldType _fieldType,
+                                             final String objectName)
     {
         GraphQLInputType ret;
         switch (_fieldType) {
@@ -83,6 +90,12 @@ public abstract class AbstractProvider
                 break;
             case DATETIME:
                 ret = ExtendedScalars.DateTime;
+                break;
+            case OBJECT:
+                ret = GraphQLTypeReference.typeRef(objectName);
+                break;
+            case OBJECTLIST:
+                ret = GraphQLList.list(GraphQLTypeReference.typeRef(objectName));
                 break;
             case STRING:
             default:

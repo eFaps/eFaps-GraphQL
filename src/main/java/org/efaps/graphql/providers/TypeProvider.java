@@ -16,12 +16,14 @@
  */
 package org.efaps.graphql.providers;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.efaps.eql.EQL;
 import org.efaps.eql.builder.Selectables;
 import org.efaps.graphql.ci.CIGraphQL;
@@ -33,6 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import graphql.GraphQLContext;
+import graphql.language.BooleanValue;
+import graphql.language.IntValue;
+import graphql.language.StringValue;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
@@ -174,9 +179,9 @@ public class TypeProvider
                             .name(name);
 
             final var fieldEval = EQL.builder().print()
-                            .query(CIGraphQL.FieldDefinition)
+                            .query(CIGraphQL.InputFieldDefinition)
                             .where()
-                            .attribute(CIGraphQL.FieldDefinition.ID)
+                            .attribute(CIGraphQL.InputFieldDefinition.ID)
                             .in(EQL.builder()
                                             .nestedQuery(CIGraphQL.ObjectType2FieldDefinition)
                                             .where()
@@ -185,8 +190,10 @@ public class TypeProvider
                                             .selectable(Selectables
                                                             .attribute(CIGraphQL.ObjectType2FieldDefinition.ToID)))
                             .select()
-                            .attribute(CIGraphQL.FieldDefinition.Name, CIGraphQL.FieldDefinition.FieldType,
-                                            CIGraphQL.FieldDefinition.Select)
+                            .attribute(CIGraphQL.InputFieldDefinition.Name, CIGraphQL.InputFieldDefinition.FieldType,
+                                            CIGraphQL.InputFieldDefinition.Select,
+                                            CIGraphQL.InputFieldDefinition.Required,
+                                            CIGraphQL.InputFieldDefinition.DefaultValue)
                             .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
                             .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
                             .attribute(CIGraphQL.ObjectType.Name)
@@ -195,11 +202,12 @@ public class TypeProvider
 
             final var fields = new HashMap<String, FieldDef>();
             while (fieldEval.next()) {
-                final String fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
-                final String fieldDescription = fieldEval.get(CIGraphQL.FieldDefinition.Description);
-                final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
-                final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
-                final var required = BooleanUtils.toBoolean(fieldEval.<Boolean>get(CIGraphQL.FieldDefinition.Required));
+                final String fieldName = fieldEval.get(CIGraphQL.InputFieldDefinition.Name);
+                final String fieldDescription = fieldEval.get(CIGraphQL.InputFieldDefinition.Description);
+                final FieldType fieldType = fieldEval.get(CIGraphQL.InputFieldDefinition.FieldType);
+                final String select = fieldEval.get(CIGraphQL.InputFieldDefinition.Select);
+                final String defaultValue = fieldEval.get(CIGraphQL.InputFieldDefinition.DefaultValue);
+                final var required = BooleanUtils.toBoolean(fieldEval.<Boolean>get(CIGraphQL.InputFieldDefinition.Required));
                 final String objectName = fieldEval.get("ObjectName");
                 LOG.debug("    Field: {}", fieldName);
 
@@ -207,11 +215,26 @@ public class TypeProvider
                 if (required) {
                     inputType = GraphQLNonNull.nonNull(inputType);
                 }
-                final var fieldDef = GraphQLInputObjectField.newInputObjectField()
+                final var fieldDevBldr = GraphQLInputObjectField.newInputObjectField()
                                 .name(fieldName)
                                 .description(fieldDescription)
-                                .type(inputType)
-                                .build();
+                                .type(inputType);
+                if (StringUtils.isNoneEmpty(defaultValue)) {
+                    switch (fieldType) {
+                        case BOOLEAN:
+                            fieldDevBldr.defaultValueLiteral(new BooleanValue(BooleanUtils.toBoolean(defaultValue)));
+                            break;
+                        case LONG:
+                        case INT:
+                            fieldDevBldr.defaultValueLiteral(new IntValue(BigInteger.valueOf(Long.valueOf(defaultValue))));
+                            break;
+                        default:
+                            fieldDevBldr.defaultValueLiteral(new StringValue(defaultValue));
+                    }
+                }
+
+                final var fieldDef = fieldDevBldr.build();
+
                 objectTypeBldr.field(fieldDef);
 
                 LOG.debug("....{}", fieldDef);

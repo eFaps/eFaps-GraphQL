@@ -64,6 +64,7 @@ public final class CIGraphQL
         }
 
         public final CIAttribute FieldType = new CIAttribute(this, "FieldType");
+        public final CIAttribute Required = new CIAttribute(this, "Required");
         public final CIAttribute Select = new CIAttribute(this, "Select");
     }
 

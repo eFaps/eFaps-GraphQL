@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.efaps.eql.EQL;
 import org.efaps.eql.builder.Selectables;
 import org.efaps.graphql.ci.CIGraphQL;
@@ -36,6 +37,7 @@ import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
+import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 
@@ -197,13 +199,18 @@ public class TypeProvider
                 final String fieldDescription = fieldEval.get(CIGraphQL.FieldDefinition.Description);
                 final FieldType fieldType = fieldEval.get(CIGraphQL.FieldDefinition.FieldType);
                 final String select = fieldEval.get(CIGraphQL.FieldDefinition.Select);
+                final var required = BooleanUtils.toBoolean(fieldEval.<Boolean>get(CIGraphQL.FieldDefinition.Required));
                 final String objectName = fieldEval.get("ObjectName");
                 LOG.debug("    Field: {}", fieldName);
 
+                var inputType = evalInputType(fieldType, objectName);
+                if (required) {
+                    inputType = GraphQLNonNull.nonNull(inputType);
+                }
                 final var fieldDef = GraphQLInputObjectField.newInputObjectField()
                                 .name(fieldName)
                                 .description(fieldDescription)
-                                .type(evalInputType(fieldType, objectName))
+                                .type(inputType)
                                 .build();
                 objectTypeBldr.field(fieldDef);
 

@@ -206,6 +206,22 @@ public final class CIGraphQL
         public final CIAttribute Required = new CIAttribute(this, "Required");
     }
 
+    public static final _InputFieldDefinition2ObjectType InputFieldDefinition2ObjectType = new _InputFieldDefinition2ObjectType(
+                    "c9053ab8-94b5-4347-9711-ff14003c846d");
+
+    public static class _InputFieldDefinition2ObjectType
+        extends _Object2ObjectAbstract
+    {
+
+        protected _InputFieldDefinition2ObjectType(final String _uuid)
+        {
+            super(_uuid);
+        }
+
+        public final CIAttribute FromLink = new CIAttribute(this, "FromLink");
+        public final CIAttribute ToLink = new CIAttribute(this, "ToLink");
+    }
+
     public static final _InputObjectType InputObjectType = new _InputObjectType("9beda021-a941-4e38-b2e8-0f3b75e0c557");
 
     public static class _InputObjectType

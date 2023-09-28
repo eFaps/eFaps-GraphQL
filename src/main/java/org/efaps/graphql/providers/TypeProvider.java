@@ -194,8 +194,8 @@ public class TypeProvider
                                             CIGraphQL.InputFieldDefinition.Select,
                                             CIGraphQL.InputFieldDefinition.Required,
                                             CIGraphQL.InputFieldDefinition.DefaultValue)
-                            .linkfrom(CIGraphQL.FieldDefinition2ObjectType.FromLink)
-                            .linkto(CIGraphQL.FieldDefinition2ObjectType.ToLink)
+                            .linkfrom(CIGraphQL.InputFieldDefinition2ObjectType.FromLink)
+                            .linkto(CIGraphQL.InputFieldDefinition2ObjectType.ToLink)
                             .attribute(CIGraphQL.ObjectType.Name)
                             .first().as("ObjectName")
                             .evaluate();

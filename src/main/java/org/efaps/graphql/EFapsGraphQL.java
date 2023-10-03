@@ -16,6 +16,7 @@
  */
 package org.efaps.graphql;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -42,6 +43,25 @@ public class EFapsGraphQL
 
     private static final Logger LOG = LoggerFactory.getLogger(EFapsGraphQL.class);
 
+    public ExecutionResult query(final String query,
+                                 final String operationName,
+                                 final Map<String, Object> variables)
+        throws EFapsException
+    {
+        final var schemaBldr = GraphQLSchema.newSchema();
+        final var ctx = withContext(schemaBldr);
+
+        final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
+                        .operationName(operationName)
+                        .query(query)
+                        .variables(variables)
+                        .graphQLContext(ctx)
+                        .build();
+        final GraphQL build = GraphQL.newGraphQL(schemaBldr.build()).build();
+        final ExecutionResult executionResult = build.execute(executionInput);
+        return executionResult;
+    }
+
     public ExecutionResult query(final String _query)
         throws EFapsException
     {
@@ -49,6 +69,8 @@ public class EFapsGraphQL
         final var ctx = withContext(schemaBldr);
 
         final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
+                        .operationName(_query)
+
                         .query(_query)
                         .graphQLContext(ctx)
                         .build();

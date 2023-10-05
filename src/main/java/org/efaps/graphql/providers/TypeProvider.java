@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 - 2022 The eFaps Team
+ * Copyright 2003 - 2023 The eFaps Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ import graphql.language.BooleanValue;
 import graphql.language.IntValue;
 import graphql.language.StringValue;
 import graphql.schema.GraphQLArgument;
+import graphql.schema.GraphQLEnumType;
+import graphql.schema.GraphQLEnumValueDefinition;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
@@ -58,6 +60,7 @@ public class TypeProvider
         final var ret = new HashSet<GraphQLType>();
         ret.addAll(getObjectTypes(contextBldr));
         ret.addAll(getInputTypes(contextBldr));
+        ret.addAll(getEnumTypes(contextBldr));
         return ret;
     }
 
@@ -68,17 +71,19 @@ public class TypeProvider
         final var eval = EQL.builder().print()
                         .query(CIGraphQL.ObjectType)
                         .select()
-                        .attribute(CIGraphQL.ObjectType.Name)
+                        .attribute(CIGraphQL.ObjectType.Name, CIGraphQL.ObjectType.Description)
                         .evaluate();
         while (eval.next()) {
             final String name = eval.get(CIGraphQL.ObjectType.Name);
+            final String description = eval.get(CIGraphQL.ObjectType.Description);
             LOG.debug("ObjectDef: {}", name);
             final var objectDefBldr = ObjectDef.builder();
             objectDefBldr.withName(name)
                             .withOid(eval.inst().getOid());
 
             final var objectTypeBldr = GraphQLObjectType.newObject()
-                            .name(name);
+                            .name(name)
+                            .description(description);
 
             final var fieldEval = EQL.builder().print()
                             .query(CIGraphQL.FieldDefinition)
@@ -166,17 +171,19 @@ public class TypeProvider
         final var eval = EQL.builder().print()
                         .query(CIGraphQL.InputObjectType)
                         .select()
-                        .attribute(CIGraphQL.InputObjectType.Name)
+                        .attribute(CIGraphQL.InputObjectType.Name, CIGraphQL.InputObjectType.Description)
                         .evaluate();
         while (eval.next()) {
             final String name = eval.get(CIGraphQL.InputObjectType.Name);
+            final String description = eval.get(CIGraphQL.InputObjectType.Description);
             LOG.debug("ObjectDef: {}", name);
             final var objectDefBldr = ObjectDef.builder();
             objectDefBldr.withName(name)
                             .withOid(eval.inst().getOid());
 
             final var objectTypeBldr = GraphQLInputObjectType.newInputObject()
-                            .name(name);
+                            .name(name)
+                            .description(description);
 
             final var fieldEval = EQL.builder().print()
                             .query(CIGraphQL.InputFieldDefinition)
@@ -207,7 +214,8 @@ public class TypeProvider
                 final FieldType fieldType = fieldEval.get(CIGraphQL.InputFieldDefinition.FieldType);
                 final String select = fieldEval.get(CIGraphQL.InputFieldDefinition.Select);
                 final String defaultValue = fieldEval.get(CIGraphQL.InputFieldDefinition.DefaultValue);
-                final var required = BooleanUtils.toBoolean(fieldEval.<Boolean>get(CIGraphQL.InputFieldDefinition.Required));
+                final var required = BooleanUtils
+                                .toBoolean(fieldEval.<Boolean>get(CIGraphQL.InputFieldDefinition.Required));
                 final String objectName = fieldEval.get("ObjectName");
                 LOG.debug("    Field: {}", fieldName);
 
@@ -226,7 +234,8 @@ public class TypeProvider
                             break;
                         case LONG:
                         case INT:
-                            fieldDevBldr.defaultValueLiteral(new IntValue(BigInteger.valueOf(Long.valueOf(defaultValue))));
+                            fieldDevBldr.defaultValueLiteral(
+                                            new IntValue(BigInteger.valueOf(Long.valueOf(defaultValue))));
                             break;
                         default:
                             fieldDevBldr.defaultValueLiteral(new StringValue(defaultValue));
@@ -247,6 +256,57 @@ public class TypeProvider
             LOG.info("Read type: '{}' with {}", name, fields);
             ret.add(objectTypeBldr.build());
             _contextBldr.of(name, objectDefBldr.withFields(fields).build());
+        }
+        return ret;
+    }
+
+    private Set<GraphQLType> getEnumTypes(final GraphQLContext.Builder _contextBldr)
+        throws EFapsException
+    {
+        final var ret = new HashSet<GraphQLType>();
+        final var eval = EQL.builder().print()
+                        .query(CIGraphQL.EnumType)
+                        .select()
+                        .attribute(CIGraphQL.EnumType.Name, CIGraphQL.EnumType.Description)
+                        .evaluate();
+        while (eval.next()) {
+            final String name = eval.get(CIGraphQL.EnumType.Name);
+            final String description = eval.get(CIGraphQL.EnumType.Description);
+            final var enumTypeBldr = GraphQLEnumType.newEnum()
+                            .name(name)
+                            .description(description);
+
+            final var valueEval = EQL.builder().print()
+                            .query(CIGraphQL.EnumValue)
+                            .where()
+                            .attribute(CIGraphQL.EnumValue.ID)
+                            .in(EQL.builder()
+                                            .nestedQuery(CIGraphQL.EnumType2EnumValue)
+                                            .where()
+                                            .attribute(CIGraphQL.EnumType2EnumValue.FromID).eq(eval.inst())
+                                            .up()
+                                            .selectable(Selectables
+                                                            .attribute(CIGraphQL.EnumType2EnumValue.ToID)))
+                            .select()
+                            .attribute(CIGraphQL.EnumValue.Name, CIGraphQL.EnumValue.Description,
+                                            CIGraphQL.EnumValue.Value)
+                            .linkfrom(CIGraphQL.EnumType2EnumValue.FromLink)
+                            .linkto(CIGraphQL.EnumType2EnumValue.ToLink)
+                            .attribute(CIGraphQL.EnumValue.Name)
+                            .first().as("ObjectName")
+                            .evaluate();
+
+            while (valueEval.next()) {
+                final String valueName = valueEval.get(CIGraphQL.EnumValue.Name);
+                final String valueDescription = valueEval.get(CIGraphQL.EnumValue.Description);
+                final String valueValue = valueEval.get(CIGraphQL.EnumValue.Value);
+                enumTypeBldr.value(GraphQLEnumValueDefinition.newEnumValueDefinition()
+                                .name(valueName)
+                                .description(valueDescription)
+                                .value(valueValue)
+                                .build());
+            }
+            ret.add(enumTypeBldr.build());
         }
         return ret;
     }

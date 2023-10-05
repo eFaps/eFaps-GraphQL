@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.efaps.eql.EQL;
 import org.efaps.graphql.ci.CIGraphQL;
 import org.efaps.graphql.definition.ArgumentDef;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import graphql.GraphQLContext;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLNonNull;
 
 public class MutationProvider
     extends AbstractProvider
@@ -70,7 +72,8 @@ public class MutationProvider
                             .attribute(CIGraphQL.MutationArgument.FieldLink).eq(eval.inst())
                             .select()
                             .attribute(CIGraphQL.MutationArgument.Name, CIGraphQL.MutationArgument.Description,
-                                            CIGraphQL.MutationArgument.ArgumentType, CIGraphQL.MutationArgument.Key)
+                                            CIGraphQL.MutationArgument.ArgumentType, CIGraphQL.MutationArgument.Key,
+                                            CIGraphQL.MutationArgument.Required)
                             .linkfrom(CIGraphQL.MutationArgument2ObjectType.FromLink)
                             .linkto(CIGraphQL.MutationArgument2ObjectType.ToLink)
                             .attribute(CIGraphQL.ObjectType.Name)
@@ -82,11 +85,17 @@ public class MutationProvider
                 final String argumentDesc = argumentEval.get(CIGraphQL.MutationArgument.Description);
                 final String argumentKey = argumentEval.get(CIGraphQL.MutationArgument.Key);
                 final FieldType argumentType = argumentEval.get(CIGraphQL.MutationArgument.ArgumentType);
+                final Boolean required = BooleanUtils
+                                .toBoolean(argumentEval.<Boolean>get(CIGraphQL.MutationArgument.Required));
                 final String argumentObject = argumentEval.get("ObjectName");
+                var argumentObjectType = evalInputType(argumentType, argumentObject);
+                if (required) {
+                    argumentObjectType = GraphQLNonNull.nonNull(argumentObjectType);
+                }
                 final var argument = GraphQLArgument.newArgument()
                                 .name(argumentName)
                                 .description(argumentDesc)
-                                .type(evalInputType(argumentType, argumentObject))
+                                .type(argumentObjectType)
                                 .build();
                 arguments.add(argument);
                 argumentDefs.add(ArgumentDef.builder()

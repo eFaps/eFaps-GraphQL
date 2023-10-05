@@ -33,6 +33,7 @@ public final class CIGraphQL
         }
         public final CIAttribute ArgumentType = new CIAttribute(this, "ArgumentType");
         public final CIAttribute FieldLink = new CIAttribute(this, "FieldLink");
+        public final CIAttribute Required = new CIAttribute(this, "Required");
     }
 
     public static final _ArgumentAbstract2ObjectType ArgumentAbstract2ObjectType = new _ArgumentAbstract2ObjectType("191db8f8-a548-4d33-af94-8cf4703405f7");

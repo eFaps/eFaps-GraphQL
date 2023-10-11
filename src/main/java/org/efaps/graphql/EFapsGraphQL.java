@@ -69,8 +69,6 @@ public class EFapsGraphQL
         final var ctx = withContext(schemaBldr);
 
         final ExecutionInput executionInput = ExecutionInput.newExecutionInput()
-                        .operationName(_query)
-
                         .query(_query)
                         .graphQLContext(ctx)
                         .build();

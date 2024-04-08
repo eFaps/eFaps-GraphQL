@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.eql.EQL;
 import org.efaps.graphql.ci.CIGraphQL;
 import org.efaps.graphql.definition.ArgumentDef;
@@ -41,87 +42,100 @@ public class EntryPointProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(EntryPointProvider.class);
 
-    public List<GraphQLFieldDefinition> getFields(final GraphQLContext.Builder _contextBldr)
+    private static List<GraphQLFieldDefinition> FIELDCACHE = new ArrayList<>();
+    private static Object CONTEXTCACHE;
+
+    public List<GraphQLFieldDefinition> getFields(final GraphQLContext.Builder contextBldr)
         throws EFapsException
     {
-        final var ret = new ArrayList<GraphQLFieldDefinition>();
-        final var eval = EQL.builder().print()
-                        .query(CIGraphQL.EntryPointFieldDefinition)
-                        .select()
-                        .attribute(CIGraphQL.EntryPointFieldDefinition.Name,
-                                        CIGraphQL.EntryPointFieldDefinition.FieldType,
-                                        CIGraphQL.EntryPointFieldDefinition.Description)
-                        .linkfrom(CIGraphQL.EntryPointFieldDefinition2ObjectType.FromLink)
-                        .linkto(CIGraphQL.EntryPointFieldDefinition2ObjectType.ToLink)
-                        .attribute(CIGraphQL.ObjectType.Name)
-                        .first().as("ObjectName")
-                        .evaluate();
-        final var fields = new HashMap<String, FieldDef>();
-        while (eval.next()) {
-            final String fieldName = eval.get(CIGraphQL.EntryPointFieldDefinition.Name);
-            final FieldType fieldType = eval.get(CIGraphQL.EntryPointFieldDefinition.FieldType);
-            final String fieldDescription = eval.get(CIGraphQL.EntryPointFieldDefinition.Description);
-            final String objectName = eval.get("ObjectName");
-            LOG.info("EntryPointField: {}", fieldName);
-
-            final var arguments = new ArrayList<GraphQLArgument>();
-            final var argumentEval = EQL.builder().print()
-                            .query(CIGraphQL.Argument)
-                            .where()
-                            .attribute(CIGraphQL.Argument.FieldLink).eq(eval.inst())
+        final List<GraphQLFieldDefinition> ret;
+        final var caching = EFapsSystemConfiguration.get().getAttributeValueAsBoolean(Utils.SYSCONF_SCHEMA_CACHE);
+        if (caching && !FIELDCACHE.isEmpty()) {
+            LOG.info("Loading entryPoints from CACHE");
+            ret = FIELDCACHE;
+            contextBldr.of(Utils.QUERYNAME, CONTEXTCACHE);
+        } else {
+            ret = new ArrayList<>();
+            final var eval = EQL.builder().print()
+                            .query(CIGraphQL.EntryPointFieldDefinition)
                             .select()
-                            .attribute(CIGraphQL.Argument.Name, CIGraphQL.Argument.Description,
-                                            CIGraphQL.Argument.ArgumentType, CIGraphQL.Argument.WhereStmt,
-                                            CIGraphQL.Argument.Required)
-                            .linkfrom(CIGraphQL.ArgumentAbstract2ObjectType.FromLink)
-                            .linkto(CIGraphQL.ArgumentAbstract2ObjectType.ToLink)
+                            .attribute(CIGraphQL.EntryPointFieldDefinition.Name,
+                                            CIGraphQL.EntryPointFieldDefinition.FieldType,
+                                            CIGraphQL.EntryPointFieldDefinition.Description)
+                            .linkfrom(CIGraphQL.EntryPointFieldDefinition2ObjectType.FromLink)
+                            .linkto(CIGraphQL.EntryPointFieldDefinition2ObjectType.ToLink)
                             .attribute(CIGraphQL.ObjectType.Name)
                             .first().as("ObjectName")
                             .evaluate();
-            final var argumentDefs = new ArrayList<ArgumentDef>();
-            while (argumentEval.next()) {
-                final String argumentName = argumentEval.get(CIGraphQL.Argument.Name);
-                final String argumentDesc = argumentEval.get(CIGraphQL.Argument.Description);
-                final String argumentWhereStmt = argumentEval.get(CIGraphQL.Argument.WhereStmt);
-                final FieldType argumentType = argumentEval.get(CIGraphQL.Argument.ArgumentType);
-                final Boolean required = BooleanUtils
-                                .toBoolean(argumentEval.<Boolean>get(CIGraphQL.Argument.Required));
-                final String argumentObjectName = argumentEval.get("ObjectName");
-                var argumentObjectType = evalInputType(argumentType, argumentObjectName);
+            final var fields = new HashMap<String, FieldDef>();
+            while (eval.next()) {
+                final String fieldName = eval.get(CIGraphQL.EntryPointFieldDefinition.Name);
+                final FieldType fieldType = eval.get(CIGraphQL.EntryPointFieldDefinition.FieldType);
+                final String fieldDescription = eval.get(CIGraphQL.EntryPointFieldDefinition.Description);
+                final String objectName = eval.get("ObjectName");
+                LOG.info("EntryPointField: {}", fieldName);
 
-                if (required) {
-                    argumentObjectType = GraphQLNonNull.nonNull(argumentObjectType);
+                final var arguments = new ArrayList<GraphQLArgument>();
+                final var argumentEval = EQL.builder().print()
+                                .query(CIGraphQL.Argument)
+                                .where()
+                                .attribute(CIGraphQL.Argument.FieldLink).eq(eval.inst())
+                                .select()
+                                .attribute(CIGraphQL.Argument.Name, CIGraphQL.Argument.Description,
+                                                CIGraphQL.Argument.ArgumentType, CIGraphQL.Argument.WhereStmt,
+                                                CIGraphQL.Argument.Required)
+                                .linkfrom(CIGraphQL.ArgumentAbstract2ObjectType.FromLink)
+                                .linkto(CIGraphQL.ArgumentAbstract2ObjectType.ToLink)
+                                .attribute(CIGraphQL.ObjectType.Name)
+                                .first().as("ObjectName")
+                                .evaluate();
+                final var argumentDefs = new ArrayList<ArgumentDef>();
+                while (argumentEval.next()) {
+                    final String argumentName = argumentEval.get(CIGraphQL.Argument.Name);
+                    final String argumentDesc = argumentEval.get(CIGraphQL.Argument.Description);
+                    final String argumentWhereStmt = argumentEval.get(CIGraphQL.Argument.WhereStmt);
+                    final FieldType argumentType = argumentEval.get(CIGraphQL.Argument.ArgumentType);
+                    final Boolean required = BooleanUtils
+                                    .toBoolean(argumentEval.<Boolean>get(CIGraphQL.Argument.Required));
+                    final String argumentObjectName = argumentEval.get("ObjectName");
+                    var argumentObjectType = evalInputType(argumentType, argumentObjectName);
+
+                    if (required) {
+                        argumentObjectType = GraphQLNonNull.nonNull(argumentObjectType);
+                    }
+
+                    final var argument = GraphQLArgument.newArgument()
+                                    .name(argumentName)
+                                    .description(argumentDesc)
+                                    .type(argumentObjectType)
+                                    .build();
+                    arguments.add(argument);
+                    argumentDefs.add(ArgumentDef.builder()
+                                    .withName(argumentName)
+                                    .withFieldType(argumentType)
+                                    .withWhereStmt(argumentWhereStmt)
+                                    .build());
                 }
-
-                final var argument = GraphQLArgument.newArgument()
-                                .name(argumentName)
-                                .description(argumentDesc)
-                                .type(argumentObjectType)
+                final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()
+                                .name(fieldName)
+                                .description(fieldDescription)
+                                .arguments(arguments)
+                                .type(evalOutputType(fieldType, objectName))
                                 .build();
-                arguments.add(argument);
-                argumentDefs.add(ArgumentDef.builder()
-                                .withName(argumentName)
-                                .withFieldType(argumentType)
-                                .withWhereStmt(argumentWhereStmt)
+
+                LOG.debug("....{}", fieldDef);
+                ret.add(fieldDef);
+                fields.put(fieldName, FieldDef.builder()
+                                .withName(fieldName)
+                                .withArguments(argumentDefs)
                                 .build());
             }
-            final var fieldDef = GraphQLFieldDefinition.newFieldDefinition()
-                            .name(fieldName)
-                            .description(fieldDescription)
-                            .arguments(arguments)
-                            .type(evalOutputType(fieldType, objectName))
-                            .build();
-
-            LOG.debug("....{}", fieldDef);
-            ret.add(fieldDef);
-
-            fields.put(fieldName, FieldDef.builder()
-                            .withName(fieldName)
-                            .withArguments(argumentDefs)
-                            .build());
+            final var query = ObjectDef.builder().withFields(fields).build();
+            contextBldr.of(Utils.QUERYNAME, query);
+            if (caching) {
+                CONTEXTCACHE = query;
+            }
         }
-        final var objectDefBldr = ObjectDef.builder();
-        _contextBldr.of(Utils.QUERYNAME, objectDefBldr.withFields(fields).build());
         return ret;
     }
 }

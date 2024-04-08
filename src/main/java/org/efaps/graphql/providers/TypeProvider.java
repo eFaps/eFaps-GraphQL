@@ -19,16 +19,19 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.efaps.admin.EFapsSystemConfiguration;
 import org.efaps.eql.EQL;
 import org.efaps.eql.builder.Selectables;
 import org.efaps.graphql.ci.CIGraphQL;
 import org.efaps.graphql.definition.ArgumentDef;
 import org.efaps.graphql.definition.FieldDef;
 import org.efaps.graphql.definition.ObjectDef;
+import org.efaps.graphql.util.Utils;
 import org.efaps.util.EFapsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,17 +56,51 @@ public class TypeProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
 
+    private static Set<GraphQLType> TYPECACHE = new HashSet<>();
+    private static Map<String, Object> VALUECACHE = new HashMap<>();
+
     public Set<GraphQLType> getTypes(final GraphQLContext.Builder contextBldr)
         throws EFapsException
     {
-        final var ret = new HashSet<GraphQLType>();
-        ret.addAll(getObjectTypes(contextBldr));
-        ret.addAll(getInputTypes(contextBldr));
-        ret.addAll(getEnumTypes(contextBldr));
+        Set<GraphQLType> ret;
+        if (EFapsSystemConfiguration.get().getAttributeValueAsBoolean(Utils.SYSCONF_SCHEMA_CACHE)) {
+            if (TYPECACHE.isEmpty()) {
+                readTypes(contextBldr, true);
+            } else {
+                LOG.info("Loading types from CACHE");
+            }
+            ret = TYPECACHE;
+            for (final var entry : VALUECACHE.entrySet()) {
+                contextBldr.of(entry.getKey(), entry.getValue());
+            }
+        } else {
+            ret = readTypes(contextBldr, false);
+        }
         return ret;
     }
 
-    private Set<GraphQLType> getObjectTypes(final GraphQLContext.Builder _contextBldr)
+    private Set<GraphQLType> readTypes(final GraphQLContext.Builder contextBldr,
+                                       final boolean cacheing)
+        throws EFapsException
+    {
+        final Set<GraphQLType> ret = new HashSet<>();
+        final Map<String, Object> contextValues = new HashMap<>();
+        ret.addAll(getObjectTypes(contextValues));
+        ret.addAll(getInputTypes(contextValues));
+        ret.addAll(getEnumTypes());
+        for (final var entry : contextValues.entrySet()) {
+            contextBldr.of(entry.getKey(), entry.getValue());
+        }
+        if (cacheing) {
+            TYPECACHE.clear();
+            TYPECACHE.addAll(ret);
+            VALUECACHE.clear();
+            VALUECACHE.putAll(contextValues);
+        }
+        return ret;
+    }
+
+    private Set<GraphQLType> getObjectTypes(final Map<String, Object> contextValues)
         throws EFapsException
     {
         final var ret = new HashSet<GraphQLType>();
@@ -158,12 +195,12 @@ public class TypeProvider
             }
             LOG.info("Read type: '{}' with {}", name, fields);
             ret.add(objectTypeBldr.build());
-            _contextBldr.of(name, objectDefBldr.withFields(fields).build());
+            contextValues.put(name, objectDefBldr.withFields(fields).build());
         }
         return ret;
     }
 
-    private Set<GraphQLType> getInputTypes(final GraphQLContext.Builder _contextBldr)
+    private Set<GraphQLType> getInputTypes(final Map<String, Object> contextValues)
         throws EFapsException
     {
         final var ret = new HashSet<GraphQLType>();
@@ -254,12 +291,12 @@ public class TypeProvider
             }
             LOG.info("Read type: '{}' with {}", name, fields);
             ret.add(objectTypeBldr.build());
-            _contextBldr.of(name, objectDefBldr.withFields(fields).build());
+            contextValues.put(name, objectDefBldr.withFields(fields).build());
         }
         return ret;
     }
 
-    private Set<GraphQLType> getEnumTypes(final GraphQLContext.Builder _contextBldr)
+    private Set<GraphQLType> getEnumTypes()
         throws EFapsException
     {
         final var ret = new HashSet<GraphQLType>();

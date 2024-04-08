@@ -20,4 +20,6 @@ public class Utils
 {
     public static String QUERYNAME = "query";
     public static String MUTATIONNAME = "mutation";
+    public static String SYSCONF_SCHEMA_CACHE = "org.efaps.kernel.graphql.Schema.ActivateCache";
+
 }

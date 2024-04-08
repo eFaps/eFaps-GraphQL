@@ -134,6 +134,7 @@ public class EntryPointProvider
             contextBldr.of(Utils.QUERYNAME, query);
             if (caching) {
                 CONTEXTCACHE = query;
+                FIELDCACHE = ret;
             }
         }
         return ret;

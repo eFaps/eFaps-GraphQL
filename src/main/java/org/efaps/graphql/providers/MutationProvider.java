@@ -135,6 +135,7 @@ public class MutationProvider
             contextBldr.of(Utils.MUTATIONNAME, mutation);
             if (caching) {
                 CONTEXTCACHE = mutation;
+                FIELDCACHE = ret;
             }
         }
         return ret;

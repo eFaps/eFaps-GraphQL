@@ -347,4 +347,9 @@ public class TypeProvider
         return ret;
     }
 
+    public static void clearCache()
+    {
+        TYPECACHE.clear();
+        VALUECACHE.clear();
+    }
 }

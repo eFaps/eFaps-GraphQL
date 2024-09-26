@@ -51,9 +51,11 @@ import graphql.schema.GraphQLCodeRegistry.Builder;
 
 public class DataFetcherProvider
 {
+
     private static final Logger LOG = LoggerFactory.getLogger(DataFetcherProvider.class);
 
-    public void addDataFetchers(final Builder _registryBldr, final GraphQLContext.Builder _contextBldr)
+    public void addDataFetchers(final Builder _registryBldr,
+                                final GraphQLContext.Builder _contextBldr)
         throws EFapsException
     {
         final var eval = EQL.builder()
@@ -74,26 +76,26 @@ public class DataFetcherProvider
             if (fieldInstance != null && fieldInstance.isValid()) {
                 if (fieldInstance.getType().equals(CIGraphQL.EntryPointFieldDefinition.getType())) {
                     fieldName = EQL.builder()
-                                .print(fieldInstance)
-                                .attribute(CIGraphQL.EntryPointFieldDefinition.Name)
-                            .evaluate()
-                        .get(CIGraphQL.EntryPointFieldDefinition.Name);
+                                    .print(fieldInstance)
+                                    .attribute(CIGraphQL.EntryPointFieldDefinition.Name)
+                                    .evaluate()
+                                    .get(CIGraphQL.EntryPointFieldDefinition.Name);
                     typeName = Utils.QUERYNAME;
                 } else if (fieldInstance.getType().equals(CIGraphQL.MutationFieldDefinition.getType())) {
                     fieldName = EQL.builder()
                                     .print(fieldInstance)
                                     .attribute(CIGraphQL.MutationFieldDefinition.Name)
-                                .evaluate()
-                            .get(CIGraphQL.MutationFieldDefinition.Name);
+                                    .evaluate()
+                                    .get(CIGraphQL.MutationFieldDefinition.Name);
                     typeName = Utils.MUTATIONNAME;
                 } else {
                     final var fieldEval = EQL.builder()
                                     .print(fieldInstance)
                                     .attribute(CIGraphQL.FieldDefinition.Name)
-                                        .linkfrom(CIGraphQL.ObjectType2FieldDefinition.ToLink)
-                                        .linkto(CIGraphQL.ObjectType2FieldDefinition.FromLink)
-                                        .attribute(CIGraphQL.ObjectType.Name)
-                                        .first().as("ObjectName")
+                                    .linkfrom(CIGraphQL.ObjectType2FieldDefinition.ToLink)
+                                    .linkto(CIGraphQL.ObjectType2FieldDefinition.FromLink)
+                                    .attribute(CIGraphQL.ObjectType.Name)
+                                    .first().as("ObjectName")
                                     .evaluate();
                     typeName = fieldEval.get("ObjectName");
                     fieldName = fieldEval.get(CIGraphQL.FieldDefinition.Name);
@@ -105,13 +107,13 @@ public class DataFetcherProvider
                     final var dataFetcher = (DataFetcher<?>) clazz.getConstructor().newInstance();
 
                     final var propertyEval = EQL.builder().print()
-                        .query(CIGraphQL.Property)
-                        .where()
-                        .attribute(CIGraphQL.Property.ParentElementLink).eq(eval.inst())
-                        .select()
-                        .attribute(CIGraphQL.Property.Key, CIGraphQL.Property.Value)
-                        .evaluate();
-                    final var properties =new HashMap<String, String>();
+                                    .query(CIGraphQL.Property)
+                                    .where()
+                                    .attribute(CIGraphQL.Property.ParentElementLink).eq(eval.inst())
+                                    .select()
+                                    .attribute(CIGraphQL.Property.Key, CIGraphQL.Property.Value)
+                                    .evaluate();
+                    final var properties = new HashMap<String, String>();
                     while (propertyEval.next()) {
                         properties.put(propertyEval.get(CIGraphQL.Property.Key),
                                         propertyEval.get(CIGraphQL.Property.Value));
@@ -129,7 +131,8 @@ public class DataFetcherProvider
         }
     }
 
-    public static String contextKey(final String _typeName, final String _fieldName)
+    public static String contextKey(final String _typeName,
+                                    final String _fieldName)
     {
         return "datafetcher-" + _typeName + "-" + _fieldName;
     }

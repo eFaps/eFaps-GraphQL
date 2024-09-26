@@ -140,4 +140,10 @@ public class MutationProvider
         }
         return ret;
     }
+
+    public static void clearCache()
+    {
+        FIELDCACHE.clear();
+        CONTEXTCACHE = null;
+    }
 }

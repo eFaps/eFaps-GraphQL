@@ -42,18 +42,15 @@ public class MutationProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(MutationProvider.class);
 
-    private static List<GraphQLFieldDefinition> FIELDCACHE = new ArrayList<>();
-    private static Object CONTEXTCACHE;
-
     public List<GraphQLFieldDefinition> getFields(final GraphQLContext.Builder contextBldr)
         throws EFapsException
     {
         final List<GraphQLFieldDefinition> ret;
         final var caching = EFapsSystemConfiguration.get().getAttributeValueAsBoolean(Utils.SYSCONF_SCHEMA_CACHE);
-        if (caching && !FIELDCACHE.isEmpty()) {
+        if (caching && !getCache().mutationFields.isEmpty()) {
             LOG.info("Loading mutations from CACHE");
-            ret = FIELDCACHE;
-            contextBldr.of(Utils.MUTATIONNAME, CONTEXTCACHE);
+            ret = getCache().mutationFields;
+            contextBldr.of(Utils.MUTATIONNAME, getCache().mutationContext);
         } else {
             ret = new ArrayList<>();
             final var fields = new HashMap<String, FieldDef>();
@@ -134,16 +131,10 @@ public class MutationProvider
             final var mutation = ObjectDef.builder().withFields(fields).build();
             contextBldr.of(Utils.MUTATIONNAME, mutation);
             if (caching) {
-                CONTEXTCACHE = mutation;
-                FIELDCACHE = ret;
+                getCache().mutationContext = mutation;
+                getCache().mutationFields = ret;
             }
         }
         return ret;
-    }
-
-    public static void clearCache()
-    {
-        FIELDCACHE.clear();
-        CONTEXTCACHE = null;
     }
 }

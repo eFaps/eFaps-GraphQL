@@ -42,18 +42,15 @@ public class EntryPointProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(EntryPointProvider.class);
 
-    private static List<GraphQLFieldDefinition> FIELDCACHE = new ArrayList<>();
-    private static Object CONTEXTCACHE;
-
     public List<GraphQLFieldDefinition> getFields(final GraphQLContext.Builder contextBldr)
         throws EFapsException
     {
         final List<GraphQLFieldDefinition> ret;
         final var caching = EFapsSystemConfiguration.get().getAttributeValueAsBoolean(Utils.SYSCONF_SCHEMA_CACHE);
-        if (caching && !FIELDCACHE.isEmpty()) {
+        if (caching && !getCache().entryPointFields.isEmpty()) {
             LOG.info("Loading entryPoints from CACHE");
-            ret = FIELDCACHE;
-            contextBldr.of(Utils.QUERYNAME, CONTEXTCACHE);
+            ret = getCache().entryPointFields;
+            contextBldr.of(Utils.QUERYNAME, getCache().entryPointContext);
         } else {
             ret = new ArrayList<>();
             final var eval = EQL.builder().print()
@@ -133,16 +130,10 @@ public class EntryPointProvider
             final var query = ObjectDef.builder().withFields(fields).build();
             contextBldr.of(Utils.QUERYNAME, query);
             if (caching) {
-                CONTEXTCACHE = query;
-                FIELDCACHE = ret;
+                getCache().entryPointContext = query;
+                getCache().entryPointFields = ret;
             }
         }
         return ret;
-    }
-
-    public static void clearCache()
-    {
-        FIELDCACHE.clear();
-        CONTEXTCACHE = null;
     }
 }

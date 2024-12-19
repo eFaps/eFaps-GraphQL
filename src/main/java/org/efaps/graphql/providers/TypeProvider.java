@@ -56,21 +56,18 @@ public class TypeProvider
 
     private static final Logger LOG = LoggerFactory.getLogger(TypeProvider.class);
 
-    private static Set<GraphQLType> TYPECACHE = new HashSet<>();
-    private static Map<String, Object> VALUECACHE = new HashMap<>();
-
     public Set<GraphQLType> getTypes(final GraphQLContext.Builder contextBldr)
         throws EFapsException
     {
         Set<GraphQLType> ret;
         if (EFapsSystemConfiguration.get().getAttributeValueAsBoolean(Utils.SYSCONF_SCHEMA_CACHE)) {
-            if (TYPECACHE.isEmpty()) {
+            if (getCache().types.isEmpty()) {
                 readTypes(contextBldr, true);
             } else {
                 LOG.info("Loading types from CACHE");
             }
-            ret = TYPECACHE;
-            for (final var entry : VALUECACHE.entrySet()) {
+            ret = getCache().types;
+            for (final var entry : getCache().values.entrySet()) {
                 contextBldr.of(entry.getKey(), entry.getValue());
             }
         } else {
@@ -92,10 +89,10 @@ public class TypeProvider
             contextBldr.of(entry.getKey(), entry.getValue());
         }
         if (cacheing) {
-            TYPECACHE.clear();
-            TYPECACHE.addAll(ret);
-            VALUECACHE.clear();
-            VALUECACHE.putAll(contextValues);
+            getCache().types.clear();
+            getCache().types.addAll(ret);
+            getCache().values.clear();
+            getCache().values.putAll(contextValues);
         }
         return ret;
     }
@@ -345,11 +342,5 @@ public class TypeProvider
             ret.add(enumTypeBldr.build());
         }
         return ret;
-    }
-
-    public static void clearCache()
-    {
-        TYPECACHE.clear();
-        VALUECACHE.clear();
     }
 }

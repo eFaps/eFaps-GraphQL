@@ -29,7 +29,10 @@ public enum FieldType implements IEnum
     BOOLEAN,
     DATE,
     DATETIME,
-    ENUM;
+    ENUM,
+    STRINGLIST,
+    INTLIST,
+    LONGLIST;
 
     @Override
     public int getInt()

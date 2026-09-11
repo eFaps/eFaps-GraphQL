@@ -76,6 +76,9 @@ public abstract class AbstractProvider
             case OBJECTLIST -> GraphQLList.list(GraphQLTypeReference.typeRef(objectName));
             case ENUM -> GraphQLTypeReference.typeRef(objectName);
             case STRING -> Scalars.GraphQLString;
+            case STRINGLIST -> GraphQLList.list(Scalars.GraphQLString);
+            case INTLIST -> GraphQLList.list(Scalars.GraphQLInt);
+            case LONGLIST -> GraphQLList.list(ExtendedScalars.GraphQLLong);
             default -> Scalars.GraphQLString;
         };
         return ret;

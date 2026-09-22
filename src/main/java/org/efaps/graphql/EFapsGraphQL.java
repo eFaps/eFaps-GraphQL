@@ -56,7 +56,9 @@ public class EFapsGraphQL
                         .variables(variables)
                         .graphQLContext(ctx)
                         .build();
-        final GraphQL build = GraphQL.newGraphQL(schemaBldr.build()).build();
+        final GraphQL build = GraphQL.newGraphQL(schemaBldr.build())
+                        .defaultDataFetcherExceptionHandler(new EFapsDataFetcherExceptionHandler())
+                        .build();
         final ExecutionResult executionResult = build.execute(executionInput);
         return executionResult;
     }
